@@ -53,9 +53,9 @@ Artefatti prodotti (nomi reali del build verificato, versione 1.0.0):
 
 | Formato | File | Dimensione |
 |---|---|---|
-| Debian/Ubuntu | `bundle/deb/forziere_1.0.0_amd64.deb` | ~1,8 MB |
-| Fedora/RHEL/openSUSE | `bundle/rpm/forziere-1.0.0-1.x86_64.rpm` | ~1,8 MB |
-| Universale | `bundle/appimage/forziere_1.0.0_amd64.AppImage` | ~84 MB |
+| Debian/Ubuntu | `bundle/deb/Forziere_1.0.0_amd64.deb` | ~1,8 MB |
+| Fedora/RHEL/openSUSE | `bundle/rpm/Forziere-1.0.0-1.x86_64.rpm` | ~1,8 MB |
+| Universale | `bundle/appimage/Forziere_1.0.0_amd64.AppImage` | ~84 MB |
 
 Il binario "nudo" è anche in `src-tauri/target/release/forziere`.
 Il bundle AppImage scarica `linuxdeploy` da GitHub al primo build: serve connessione a internet.
@@ -65,20 +65,20 @@ Il bundle AppImage scarica `linuxdeploy` da GitHub al primo build: serve conness
 **.deb (Debian, Ubuntu, Mint)** — le dipendenze (`libwebkit2gtk-4.1-0`, `libgtk-3-0`) sono installate automaticamente:
 
 ```bash
-sudo apt install ./src-tauri/target/release/bundle/deb/forziere_1.0.0_amd64.deb
+sudo apt install ./src-tauri/target/release/bundle/deb/Forziere_1.0.0_amd64.deb
 ```
 
 **.rpm (Fedora, RHEL, openSUSE)**:
 
 ```bash
-sudo dnf install ./src-tauri/target/release/bundle/rpm/forziere-1.0.0-1.x86_64.rpm
+sudo dnf install ./src-tauri/target/release/bundle/rpm/Forziere-1.0.0-1.x86_64.rpm
 ```
 
 **AppImage (qualsiasi distribuzione, nessuna installazione)**:
 
 ```bash
-chmod +x forziere_1.0.0_amd64.AppImage
-./forziere_1.0.0_amd64.AppImage
+chmod +x Forziere_1.0.0_amd64.AppImage
+./Forziere_1.0.0_amd64.AppImage
 ```
 
 Dopo l'installazione da .deb/.rpm l'app compare nel menu applicazioni; da terminale: `forziere`.
@@ -88,7 +88,7 @@ Dopo l'installazione da .deb/.rpm l'app compare nel menu applicazioni; da termin
 ```bash
 sudo apt remove forziere     # .deb
 sudo dnf remove forziere     # .rpm
-rm forziere_1.0.0_amd64.AppImage   # AppImage: basta cancellare il file
+rm Forziere_1.0.0_amd64.AppImage   # AppImage: basta cancellare il file
 ```
 
 I dati dell'utente **non vengono toccati** dalla disinstallazione (vedi [Dati dell'utente](#5-dati-dellutente)).
@@ -120,13 +120,13 @@ Artefatti attesi (nomi secondo la convenzione di Tauri 2):
 
 | Formato | File |
 |---|---|
-| Installer NSIS (consigliato) | `bundle\nsis\forziere_1.0.0_x64-setup.exe` |
-| Installer MSI | `bundle\msi\forziere_1.0.0_x64_en-US.msi` |
+| Installer NSIS (consigliato) | `bundle\nsis\Forziere_1.0.0_x64-setup.exe` |
+| Installer MSI | `bundle\msi\Forziere_1.0.0_x64_en-US.msi` |
 
 ### Installazione
 
 Doppio clic su `...-setup.exe` (o sull'`.msi`) e segui la procedura guidata.
-Da riga di comando, per l'MSI: `msiexec /i forziere_1.0.0_x64_en-US.msi`.
+Da riga di comando, per l'MSI: `msiexec /i Forziere_1.0.0_x64_en-US.msi`.
 
 Gli installer **non sono firmati**: Windows SmartScreen mostrerà "Windows ha protetto il PC".
 Scegli "Ulteriori informazioni" → "Esegui comunque". Per evitare l'avviso serve un certificato di code signing
@@ -134,8 +134,8 @@ Scegli "Ulteriori informazioni" → "Esegui comunque". Per evitare l'avviso serv
 
 ### Rimozione
 
-Impostazioni → App → App installate → *forziere* → Disinstalla.
-Oppure, per l'MSI: `msiexec /x forziere_1.0.0_x64_en-US.msi`.
+Impostazioni → App → App installate → *Forziere* → Disinstalla.
+Oppure, per l'MSI: `msiexec /x Forziere_1.0.0_x64_en-US.msi`.
 
 I dati utente restano in `%APPDATA%\com.giorgio-marini.forziere\` (vedi sezione 5).
 
@@ -162,22 +162,22 @@ Artefatti attesi:
 
 | Formato | File |
 |---|---|
-| Applicazione | `bundle/macos/forziere.app` |
-| Immagine disco | `bundle/dmg/forziere_1.0.0_aarch64.dmg` (o `x64`) |
+| Applicazione | `bundle/macos/Forziere.app` |
+| Immagine disco | `bundle/dmg/Forziere_1.0.0_aarch64.dmg` (o `x64`) |
 
 ### Installazione
 
-Apri il `.dmg` e trascina `forziere.app` nella cartella **Applicazioni**.
+Apri il `.dmg` e trascina `Forziere.app` nella cartella **Applicazioni**.
 
 L'app **non è firmata né notarizzata**: al primo avvio Gatekeeper la blocca. Apri con **clic destro → Apri**
 (poi "Apri" nel dialogo), oppure da Impostazioni di Sistema → Privacy e sicurezza → "Apri comunque".
-Se macOS dice che l'app è "danneggiata" (file scaricato): `xattr -dr com.apple.quarantine /Applications/forziere.app`.
+Se macOS dice che l'app è "danneggiata" (file scaricato): `xattr -dr com.apple.quarantine /Applications/Forziere.app`.
 Per distribuirla senza avvisi servono un Apple Developer ID e la notarizzazione
 (vedi <https://tauri.app/distribute/sign/macos/>).
 
 ### Rimozione
 
-Trascina `forziere.app` dalla cartella Applicazioni al Cestino.
+Trascina `Forziere.app` dalla cartella Applicazioni al Cestino.
 I dati restano in `~/Library/Application Support/com.giorgio-marini.forziere/` (vedi sezione 5).
 
 ## 5. Dati dell'utente

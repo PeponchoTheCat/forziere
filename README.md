@@ -42,7 +42,7 @@ npm run regression         # regressione completa: test frontend + Rust + build
 operativo di destinazione). Guida completa per Linux, Windows e macOS, con installazione, disinstallazione, firma e
 posizione dei dati: [`docs/BUILD-E-INSTALLAZIONE.md`](docs/BUILD-E-INSTALLAZIONE.md).
 
-Esempio Linux (verificato): `sudo apt install ./src-tauri/target/release/bundle/deb/forziere_1.0.0_amd64.deb`
+Esempio Linux (verificato): `sudo apt install ./src-tauri/target/release/bundle/deb/Forziere_1.0.0_amd64.deb`
 per installare, `sudo apt remove forziere` per rimuovere (i dati in `vault.json` non vengono cancellati).
 
 ### Icona
