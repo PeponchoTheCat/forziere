@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Forziere: desktop password manager (Tauri 2 + Vue 3, JavaScript, no TypeScript). Stores entries (service, URL, username, password, notes, tags) and generates secure passwords with configurable length and character classes (upper, lower, digits, symbols). UI/docs are in Italian. Not a git repository yet.
 
-Work progress is tracked in `TODO.md` and `CHANGELOG.md` (Keep a Changelog, `[Unreleased]`): update both when completing a step. The planned design lives in `~/.claude/plans/voglio-scrivere-una-applicazione-mutable-ember.md`; phases 1 (backend) and 2 (Vue UI) are done; unit tests are in place for both; master-password encryption is implemented and unit-tested; end-to-end verification of it in `npm run tauri dev` is pending.
+Work progress is tracked in `TODO.md` and `CHANGELOG.md` (Keep a Changelog, `[Unreleased]`): update both when completing a step. The planned design lives in `~/.claude/plans/voglio-scrivere-una-applicazione-mutable-ember.md`; phases 1 (backend) and 2 (Vue UI) are done; unit tests are in place for both; master-password encryption is implemented, unit-tested and manually verified in `npm run tauri dev`.
 
 ## Commands
 

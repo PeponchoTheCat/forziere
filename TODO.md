@@ -55,7 +55,7 @@ Ultimo aggiornamento: 2026-11-02 – versione corrente: 1.0.0
 - [x] Comandi `vault_status`, `setup_vault`, `unlock`, `lock`, `change_password`
 - [x] Frontend: `UnlockScreen`, `ChangePassword`, pulsante Blocca in `App.vue`
 - [x] Test AAA Rust (72) e frontend (83); regressione verde
-- [ ] Prova manuale in finestra (setup, migrazione di un vault in chiaro, sblocco, blocca, cambio password)
+- [x] Prova manuale in finestra (eseguita dall'utente, esito ok): migrazione di un vault in chiaro, voci intatte, blocca/sblocco con password errata e giusta, cambio password, riavvio con la nuova
 
 ## Futuro
 - [ ] Import/export (CSV/JSON)
