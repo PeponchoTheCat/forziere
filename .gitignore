@@ -1,0 +1,50 @@
+# --- Dipendenze e build frontend ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# --- Test e coverage ---
+coverage/
+*.lcov
+.vitest-cache/
+
+# --- Rust / Tauri ---
+# Artefatti di compilazione e bundle (.deb, .rpm, AppImage, .msi, .dmg)
+src-tauri/target/
+# Schemi generati da Tauri per l'autocompletamento delle capability
+src-tauri/gen/schemas/
+# Cargo.lock va committato (è un'applicazione, non una libreria)
+
+# --- Dati sensibili ---
+# Il vault è in chiaro: non deve mai finire nel repository
+vault.json
+vault.json.tmp
+*.vault.json
+.env
+.env.*
+!.env.example
+
+# --- Log ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# --- Editor e IDE ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Claude Code (impostazioni personali) ---
+.claude/settings.local.json

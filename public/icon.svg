@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f1a14"/>
+      <stop offset="1" stop-color="#060a08"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5cc489"/>
+      <stop offset="1" stop-color="#3a9763"/>
+    </linearGradient>
+  </defs>
+
+  <!-- sfondo con angoli tagliati -->
+  <path d="M130 32H894L992 130V894L894 992H130L32 894V130Z" fill="url(#bg)"/>
+  <path d="M130 32H894L992 130V894L894 992H130L32 894V130Z" fill="none" stroke="#4fb477" stroke-width="20"/>
+  <path d="M150 84H874L940 150V874L874 940H150L84 874V150Z" fill="none" stroke="#4fb477" stroke-opacity=".28" stroke-width="8"/>
+
+  <!-- tracce circuito -->
+  <g fill="none" stroke="#4fb477" stroke-opacity=".6" stroke-width="22" stroke-linecap="square">
+    <path d="M292 640H190V560"/>
+    <path d="M732 640H834V560"/>
+    <path d="M292 720H230"/>
+    <path d="M732 720H794"/>
+  </g>
+  <g fill="#8fd6a0">
+    <circle cx="190" cy="540" r="26"/>
+    <circle cx="834" cy="540" r="26"/>
+  </g>
+
+  <!-- arco del lucchetto -->
+  <path d="M392 480V380A120 120 0 0 1 632 380V480" fill="none" stroke="#8fd6a0" stroke-width="68"/>
+
+  <!-- corpo del lucchetto -->
+  <path d="M292 540L352 480H672L732 540V760L672 820H352L292 760Z" fill="url(#body)"/>
+
+  <!-- buco della serratura -->
+  <circle cx="512" cy="610" r="48" fill="#070b09"/>
+  <path d="M484 640H540L558 736H466Z" fill="#070b09"/>
+</svg>
