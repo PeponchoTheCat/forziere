@@ -193,7 +193,7 @@ Le voci sono nel file `vault.json` dentro la cartella dati dell'app (identificat
 - **Disinstallare l'app NON cancella `vault.json`**: reinstallando ritrovi le tue voci.
 - **Rimozione completa** (cancella definitivamente tutte le password salvate): elimina l'intera cartella indicata sopra.
 - **Backup / spostamento su un altro computer**: copia `vault.json` nella stessa posizione sulla nuova macchina, con l'app chiusa.
-- Il file è **in chiaro, non cifrato**: proteggi la cartella e i backup di conseguenza.
+- Il file è **cifrato** (AES-256-GCM, chiave da master password con Argon2id): senza la master password non è leggibile e non esiste recupero. Conserva comunque i backup con cura.
 - La cartella contiene anche cache del motore web (`WebKitCache`, `storage`, ...): si possono cancellare senza perdere dati.
 
 ## 6. Aggiornare la versione

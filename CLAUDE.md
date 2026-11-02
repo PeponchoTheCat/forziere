@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Forziere: desktop password manager (Tauri 2 + Vue 3, JavaScript, no TypeScript). Stores entries (service, URL, username, password, notes, tags) and generates secure passwords with configurable length and character classes (upper, lower, digits, symbols). UI/docs are in Italian. Not a git repository yet.
 
-Work progress is tracked in `TODO.md` and `CHANGELOG.md` (Keep a Changelog, `[Unreleased]`): update both when completing a step. The planned design lives in `~/.claude/plans/voglio-scrivere-una-applicazione-mutable-ember.md`; phases 1 (backend) and 2 (Vue UI) are done; unit tests are in place for both; end-to-end verification in `npm run tauri dev` is pending.
+Work progress is tracked in `TODO.md` and `CHANGELOG.md` (Keep a Changelog, `[Unreleased]`): update both when completing a step. The planned design lives in `~/.claude/plans/voglio-scrivere-una-applicazione-mutable-ember.md`; phases 1 (backend) and 2 (Vue UI) are done; unit tests are in place for both; master-password encryption is implemented and unit-tested; end-to-end verification of it in `npm run tauri dev` is pending.
 
 ## Commands
 
@@ -41,7 +41,7 @@ No JS linter is configured.
 
 - **Frontend** `src/` (Vue 3 `<script setup>`, Vite). Talks to Rust only via `invoke` from `@tauri-apps/api/core`; planned to be wrapped in `src/api.js`.
 - **Backend** `src-tauri/src/`: `main.rs` just calls `forziere_lib::run()`; all setup (plugins, `invoke_handler`, managed state) goes in `lib.rs`. Every new Tauri command must be registered in `generate_handler![...]`.
-- **Persistence (decided design)**: a plain, **unencrypted** `vault.json` in `app_data_dir()`, written atomically (tmp file + rename), held in a `Mutex<Vec<Entry>>` managed state. Encryption was deliberately declined by the user; keep storage isolated in its own module so it can be added later. Passwords must be generated in Rust with a CSPRNG, guaranteeing at least one char per selected class.
+- **Persistence**: `vault.json` in `app_data_dir()`, **encrypted** (v2: Argon2id + AES-256-GCM, see `crypto.rs`), written atomically (tmp file + rename), held in a `Mutex<Store>` managed state. `Store` (in `store.rs`) is a state machine `NoVault | LegacyPlaintext | Locked | Unlocked` (commands `vault_status`, `setup_vault`, `unlock`, `lock`, `change_password`); entries are readable only while unlocked, and the key is a `Zeroizing` buffer. A v1 plaintext array file is encrypted in place by `setup_vault`. No password recovery by design. Under `cfg(test)` the KDF uses minimal costs. Passwords must be generated in Rust with a CSPRNG, guaranteeing at least one char per selected class.
 
 ## Gotchas
 

@@ -14,6 +14,7 @@ Applicazione desktop (Tauri 2 + Vue 3) per storicizzare utenti e password associ
   - caratteri speciali sì/no
   - almeno un carattere per ogni classe selezionata; casualità da generatore crittografico.
 - Copia della password negli appunti, mostra/nascondi password.
+- Vault protetto da **master password**: cifratura AES-256-GCM, chiave derivata con Argon2id; pulsanti *Blocca* e *Cambia password*.
 
 ## Requisiti
 
@@ -60,8 +61,17 @@ cp design/icon.svg public/icon.svg                            # favicon del fron
 Le voci sono salvate in `vault.json` nella cartella dati dell'app (`app_data_dir`, su Linux tipicamente
 `~/.local/share/com.giorgio-marini.forziere/`). La scrittura è atomica (file temporaneo + rename).
 
-> **Attenzione sicurezza:** il file NON è cifrato e non c'è master password. Le password sono leggibili in chiaro
-> da chiunque abbia accesso al file. La cifratura è tra gli sviluppi futuri (vedi `TODO.md`).
+### Master password e cifratura
+
+- Al primo avvio si crea la master password (minimo 12 caratteri). Un vault in chiaro creato da una versione
+  precedente viene **cifrato sul posto** alla prima apertura: il file in chiaro viene sostituito.
+- Tutte le voci (anche servizi e URL) sono cifrate con **AES-256-GCM**; la chiave è derivata dalla password con
+  **Argon2id** (19 MiB, 2 iterazioni, 1 lane, salt casuale di 16 byte). Nonce nuovo a ogni salvataggio; versione e
+  parametri KDF sono autenticati, quindi una modifica del file fa fallire lo sblocco.
+- La master password non viene mai salvata. **Non esiste recupero:** se la dimentichi, i dati sono persi.
+- Formato di `vault.json` (v2): `{ "version": 2, "kdf": {alg, m, t, p, salt}, "nonce", "ciphertext" }` (base64).
+- Limite noto: finché il vault è sbloccato le voci stanno in memoria in chiaro; la chiave viene azzerata al blocco.
+  Il blocco automatico per inattività e lo svuotamento degli appunti sono ancora da fare (vedi `TODO.md`).
 
 ## Struttura
 

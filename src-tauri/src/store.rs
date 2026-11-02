@@ -1,5 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroizing;
+use crate::crypto::{self, ERR_BAD_PASSWORD, Key, KdfParams, VaultFile};
 use std::{fs, io, path::PathBuf};
 use uuid::Uuid;
 
@@ -51,28 +53,169 @@ pub fn migrate_legacy_vault(dir: &std::path::Path) -> io::Result<bool> {
     Ok(true)
 }
 
-/// Vault in chiaro su `vault.json` (nessuna cifratura, scelta voluta).
+/// Lunghezza minima della master password.
+pub const MIN_PASSWORD_LEN: usize = 12;
+pub const ERR_LOCKED: &str = "Vault bloccato";
+
+/// Stato del vault visto dal frontend.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum VaultStatus {
+    /// Nessun file: primo avvio, serve creare la master password.
+    NoVault,
+    /// File v1 in chiaro: va cifrato impostando una master password.
+    LegacyPlaintext,
+    /// File cifrato, chiave non in memoria.
+    Locked,
+    /// Chiave in memoria, voci leggibili.
+    Unlocked,
+}
+
+enum State {
+    NoVault,
+    Legacy,
+    Locked,
+    Unlocked {
+        kdf: KdfParams,
+        key: Key,
+        entries: Vec<Entry>,
+    },
+}
+
+/// Vault cifrato (Argon2id + AES-256-GCM) su `vault.json`.
 pub struct Store {
     path: PathBuf,
-    entries: Vec<Entry>,
+    state: State,
+}
+
+fn invalid(e: impl std::fmt::Display) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, e.to_string())
+}
+
+fn check_new_password(password: &str) -> Result<(), String> {
+    if password.chars().count() < MIN_PASSWORD_LEN {
+        return Err(format!(
+            "La master password deve avere almeno {MIN_PASSWORD_LEN} caratteri"
+        ));
+    }
+    Ok(())
 }
 
 impl Store {
+    /// Rileva lo stato dal file senza leggere le voci: assente = primo avvio,
+    /// array = vault v1 in chiaro, oggetto = vault cifrato v2.
     pub fn load(path: PathBuf) -> io::Result<Self> {
-        let entries = match fs::read_to_string(&path) {
-            Ok(s) => serde_json::from_str(&s)
-                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?,
-            Err(e) if e.kind() == io::ErrorKind::NotFound => Vec::new(),
-            Err(e) => return Err(e),
-        };
-        Ok(Self { path, entries })
+        Ok(Self {
+            state: Self::detect(&path)?,
+            path,
+        })
     }
 
+    fn detect(path: &std::path::Path) -> io::Result<State> {
+        let text = match fs::read_to_string(path) {
+            Ok(s) => s,
+            Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(State::NoVault),
+            Err(e) => return Err(e),
+        };
+        match serde_json::from_str::<serde_json::Value>(&text).map_err(invalid)? {
+            serde_json::Value::Array(_) => Ok(State::Legacy),
+            serde_json::Value::Object(_) => {
+                serde_json::from_str::<VaultFile>(&text).map_err(invalid)?;
+                Ok(State::Locked)
+            }
+            _ => Err(invalid("formato del vault non riconosciuto")),
+        }
+    }
+
+    pub fn status(&self) -> VaultStatus {
+        match self.state {
+            State::NoVault => VaultStatus::NoVault,
+            State::Legacy => VaultStatus::LegacyPlaintext,
+            State::Locked => VaultStatus::Locked,
+            State::Unlocked { .. } => VaultStatus::Unlocked,
+        }
+    }
+
+    /// Crea il vault (primo avvio) o cifra sul posto quello in chiaro v1.
+    /// Al termine il vault è sbloccato; il file in chiaro viene sostituito.
+    pub fn setup(&mut self, password: &str) -> Result<(), String> {
+        let entries = match self.state {
+            State::NoVault => Vec::new(),
+            State::Legacy => {
+                let text = fs::read_to_string(&self.path).map_err(|e| e.to_string())?;
+                serde_json::from_str(&text).map_err(|e| e.to_string())?
+            }
+            _ => return Err("Il vault esiste già".into()),
+        };
+        check_new_password(password)?;
+        let kdf = KdfParams::new_random();
+        let key = crypto::derive_key(password, &kdf)?;
+        self.write(&kdf, &key, &entries)
+            .map_err(|e| e.to_string())?;
+        self.state = State::Unlocked { kdf, key, entries };
+        Ok(())
+    }
+
+    pub fn unlock(&mut self, password: &str) -> Result<(), String> {
+        if !matches!(self.state, State::Locked) {
+            return Err(match self.state {
+                State::Unlocked { .. } => "Vault già sbloccato".into(),
+                _ => "Nessun vault cifrato da sbloccare".to_string(),
+            });
+        }
+        let text = fs::read_to_string(&self.path).map_err(|e| e.to_string())?;
+        let file: VaultFile = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+        let key = crypto::derive_key(password, &file.kdf)?;
+        let plain = crypto::decrypt(&key, &file)?;
+        let entries = serde_json::from_slice(&plain).map_err(|_| ERR_BAD_PASSWORD.to_string())?;
+        self.state = State::Unlocked {
+            kdf: file.kdf,
+            key,
+            entries,
+        };
+        Ok(())
+    }
+
+    /// Azzera la chiave e le voci in memoria.
+    pub fn lock(&mut self) {
+        if matches!(self.state, State::Unlocked { .. }) {
+            self.state = State::Locked;
+        }
+    }
+
+    /// Verifica la vecchia password, poi ricifra con salt e chiave nuovi.
+    pub fn change_password(&mut self, old: &str, new: &str) -> Result<(), String> {
+        let State::Unlocked { kdf, key, entries } = &self.state else {
+            return Err(ERR_LOCKED.into());
+        };
+        let candidate = crypto::derive_key(old, kdf)?;
+        if candidate.as_ref() != key.as_ref() {
+            return Err("La password attuale non è corretta".into());
+        }
+        check_new_password(new)?;
+        let new_kdf = KdfParams::new_random();
+        let new_key = crypto::derive_key(new, &new_kdf)?;
+        self.write(&new_kdf, &new_key, entries)
+            .map_err(|e| e.to_string())?;
+        if let State::Unlocked { kdf, key, .. } = &mut self.state {
+            *kdf = new_kdf;
+            *key = new_key;
+        }
+        Ok(())
+    }
+
+    /// Voci in memoria; vuote se il vault è bloccato.
     pub fn list(&self) -> Vec<Entry> {
-        self.entries.clone()
+        match &self.state {
+            State::Unlocked { entries, .. } => entries.clone(),
+            _ => Vec::new(),
+        }
     }
 
     pub fn save(&mut self, input: EntryInput) -> Result<Entry, String> {
+        if !matches!(self.state, State::Unlocked { .. }) {
+            return Err(ERR_LOCKED.into());
+        }
         if input.service.trim().is_empty() || input.username.trim().is_empty() {
             return Err("Servizio e utente sono obbligatori".into());
         }
@@ -84,10 +227,13 @@ impl Store {
             .filter(|t| !t.is_empty())
             .collect();
 
-        let previous = self.entries.clone();
-        let entry = match input.id.and_then(|id| self.entries.iter().position(|e| e.id == id)) {
+        let State::Unlocked { entries, .. } = &mut self.state else {
+            unreachable!()
+        };
+        let previous = entries.clone();
+        let entry = match input.id.and_then(|id| entries.iter().position(|e| e.id == id)) {
             Some(i) => {
-                let e = &mut self.entries[i];
+                let e = &mut entries[i];
                 e.service = input.service;
                 e.url = input.url;
                 e.username = input.username;
@@ -109,32 +255,49 @@ impl Store {
                     created_at: now,
                     updated_at: now,
                 };
-                self.entries.push(e.clone());
+                entries.push(e.clone());
                 e
             }
         };
         if let Err(e) = self.persist() {
-            self.entries = previous;
+            self.set_entries(previous);
             return Err(e.to_string());
         }
         Ok(entry)
     }
 
     pub fn delete(&mut self, id: Uuid) -> Result<(), String> {
-        let previous = self.entries.clone();
-        self.entries.retain(|e| e.id != id);
+        let State::Unlocked { entries, .. } = &mut self.state else {
+            return Err(ERR_LOCKED.into());
+        };
+        let previous = entries.clone();
+        entries.retain(|e| e.id != id);
         if let Err(e) = self.persist() {
-            self.entries = previous;
+            self.set_entries(previous);
             return Err(e.to_string());
         }
         Ok(())
     }
 
-    /// Scrittura atomica: file temporaneo + rename.
+    fn set_entries(&mut self, previous: Vec<Entry>) {
+        if let State::Unlocked { entries, .. } = &mut self.state {
+            *entries = previous;
+        }
+    }
+
     fn persist(&self) -> io::Result<()> {
+        match &self.state {
+            State::Unlocked { kdf, key, entries } => self.write(kdf, key, entries),
+            _ => Err(io::Error::other(ERR_LOCKED)),
+        }
+    }
+
+    /// Cifra le voci (nonce nuovo) e scrive in modo atomico: file temporaneo + rename.
+    fn write(&self, kdf: &KdfParams, key: &Key, entries: &[Entry]) -> io::Result<()> {
+        let plain = Zeroizing::new(serde_json::to_vec(entries)?);
+        let file = crypto::encrypt(key, kdf, &plain).map_err(io::Error::other)?;
         let tmp = self.path.with_extension("json.tmp");
-        let json = serde_json::to_string_pretty(&self.entries)?;
-        fs::write(&tmp, json)?;
+        fs::write(&tmp, serde_json::to_string_pretty(&file)?)?;
         fs::rename(&tmp, &self.path)
     }
 }
@@ -161,8 +324,24 @@ mod tests {
         dir.join("vault.json")
     }
 
+    const PW: &str = "master-password-1";
+
+    /// Store con vault creato e sbloccato.
+    fn unlocked(path: PathBuf) -> Store {
+        let mut store = Store::load(path).unwrap();
+        store.setup(PW).unwrap();
+        store
+    }
+
+    /// Riapre il file da zero e lo sblocca, come dopo un riavvio.
+    fn reopen(path: PathBuf) -> Store {
+        let mut store = Store::load(path).unwrap();
+        store.unlock(PW).unwrap();
+        store
+    }
+
     #[test]
-    fn load_returns_empty_store_when_file_is_missing() {
+    fn load_reports_no_vault_when_file_is_missing() {
         // Arrange
         let path = tmp_path("missing");
 
@@ -170,7 +349,260 @@ mod tests {
         let store = Store::load(path).unwrap();
 
         // Assert
+        assert_eq!(store.status(), VaultStatus::NoVault);
         assert!(store.list().is_empty());
+    }
+
+    #[test]
+    fn load_reports_legacy_plaintext_for_v1_array_file() {
+        // Arrange
+        let path = tmp_path("legacy");
+        fs::write(&path, "[]").unwrap();
+
+        // Act
+        let store = Store::load(path).unwrap();
+
+        // Assert
+        assert_eq!(store.status(), VaultStatus::LegacyPlaintext);
+    }
+
+    #[test]
+    fn load_reports_locked_for_encrypted_file() {
+        // Arrange
+        let path = tmp_path("locked");
+        unlocked(path.clone());
+
+        // Act
+        let store = Store::load(path).unwrap();
+
+        // Assert
+        assert_eq!(store.status(), VaultStatus::Locked);
+    }
+
+    #[test]
+    fn load_fails_with_invalid_data_for_unrecognised_json() {
+        // Arrange
+        let path = tmp_path("scalar");
+        fs::write(&path, "42").unwrap();
+
+        // Act
+        let result = Store::load(path);
+
+        // Assert
+        assert_eq!(result.err().unwrap().kind(), io::ErrorKind::InvalidData);
+    }
+
+    #[test]
+    fn setup_creates_encrypted_file_without_plaintext_fields() {
+        // Arrange
+        let path = tmp_path("setup");
+        let mut store = unlocked(path.clone());
+        store.save(input(None, "ServizioSegreto")).unwrap();
+
+        // Act
+        let raw = fs::read_to_string(&path).unwrap();
+
+        // Assert
+        assert_eq!(store.status(), VaultStatus::Unlocked);
+        assert!(raw.contains("argon2id"));
+        assert!(!raw.contains("ServizioSegreto"));
+        assert!(!raw.contains("mario"));
+    }
+
+    #[test]
+    fn setup_rejects_short_password() {
+        // Arrange
+        let mut store = Store::load(tmp_path("short")).unwrap();
+
+        // Act
+        let result = store.setup("corta");
+
+        // Assert
+        assert!(result.is_err());
+        assert_eq!(store.status(), VaultStatus::NoVault);
+    }
+
+    #[test]
+    fn setup_rejects_existing_encrypted_vault() {
+        // Arrange
+        let path = tmp_path("setup-twice");
+        unlocked(path.clone());
+        let mut store = Store::load(path).unwrap();
+
+        // Act
+        let result = store.setup("un-altra-password-1");
+
+        // Assert
+        assert!(result.is_err());
+        assert_eq!(store.status(), VaultStatus::Locked);
+    }
+
+    #[test]
+    fn setup_encrypts_legacy_plaintext_vault_keeping_entries() {
+        // Arrange
+        let path = tmp_path("migrate-v1");
+        let mut seed = unlocked(tmp_path("seed"));
+        let entry = seed.save(input(None, "GitHub")).unwrap();
+        fs::write(&path, serde_json::to_string(&seed.list()).unwrap()).unwrap();
+        let mut store = Store::load(path.clone()).unwrap();
+
+        // Act
+        store.setup(PW).unwrap();
+        let raw = fs::read_to_string(&path).unwrap();
+
+        // Assert
+        assert_eq!(store.list().len(), 1);
+        assert_eq!(store.list()[0].id, entry.id);
+        assert!(!raw.contains("GitHub"));
+        assert_eq!(reopen(path).list()[0].service, "GitHub");
+    }
+
+    #[test]
+    fn unlock_with_correct_password_loads_entries() {
+        // Arrange
+        let path = tmp_path("unlock-ok");
+        let mut first = unlocked(path.clone());
+        first.save(input(None, "GitHub")).unwrap();
+        let mut store = Store::load(path).unwrap();
+
+        // Act
+        store.unlock(PW).unwrap();
+
+        // Assert
+        assert_eq!(store.status(), VaultStatus::Unlocked);
+        assert_eq!(store.list().len(), 1);
+    }
+
+    #[test]
+    fn unlock_with_wrong_password_fails_and_stays_locked() {
+        // Arrange
+        let path = tmp_path("unlock-bad");
+        unlocked(path.clone());
+        let mut store = Store::load(path).unwrap();
+
+        // Act
+        let result = store.unlock("password-sbagliata-1");
+
+        // Assert
+        assert_eq!(result.unwrap_err(), ERR_BAD_PASSWORD);
+        assert_eq!(store.status(), VaultStatus::Locked);
+    }
+
+    #[test]
+    fn unlock_fails_when_ciphertext_was_modified_on_disk() {
+        // Arrange
+        let path = tmp_path("unlock-tamper");
+        unlocked(path.clone());
+        let mut file: VaultFile =
+            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        file.ciphertext.push_str("AAAA");
+        fs::write(&path, serde_json::to_string(&file).unwrap()).unwrap();
+        let mut store = Store::load(path).unwrap();
+
+        // Act
+        let result = store.unlock(PW);
+
+        // Assert
+        assert_eq!(result.unwrap_err(), ERR_BAD_PASSWORD);
+    }
+
+    #[test]
+    fn lock_clears_entries_and_blocks_operations() {
+        // Arrange
+        let mut store = unlocked(tmp_path("lock"));
+        store.save(input(None, "GitHub")).unwrap();
+
+        // Act
+        store.lock();
+
+        // Assert
+        assert_eq!(store.status(), VaultStatus::Locked);
+        assert!(store.list().is_empty());
+        assert_eq!(store.save(input(None, "X")).unwrap_err(), ERR_LOCKED);
+        assert_eq!(store.delete(Uuid::new_v4()).unwrap_err(), ERR_LOCKED);
+    }
+
+    #[test]
+    fn lock_then_unlock_restores_entries() {
+        // Arrange
+        let mut store = unlocked(tmp_path("lock-unlock"));
+        store.save(input(None, "GitHub")).unwrap();
+        store.lock();
+
+        // Act
+        store.unlock(PW).unwrap();
+
+        // Assert
+        assert_eq!(store.list().len(), 1);
+    }
+
+    #[test]
+    fn change_password_reencrypts_with_new_password_only() {
+        // Arrange
+        let path = tmp_path("change");
+        let mut store = unlocked(path.clone());
+        store.save(input(None, "GitHub")).unwrap();
+
+        // Act
+        store.change_password(PW, "nuova-password-12").unwrap();
+        let mut old = Store::load(path.clone()).unwrap();
+        let mut new = Store::load(path).unwrap();
+
+        // Assert
+        assert!(old.unlock(PW).is_err());
+        new.unlock("nuova-password-12").unwrap();
+        assert_eq!(new.list().len(), 1);
+    }
+
+    #[test]
+    fn change_password_rejects_wrong_current_password() {
+        // Arrange
+        let mut store = unlocked(tmp_path("change-wrong"));
+
+        // Act
+        let result = store.change_password("sbagliata-sbagliata", "nuova-password-12");
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn change_password_rejects_short_new_password() {
+        // Arrange
+        let mut store = unlocked(tmp_path("change-short"));
+
+        // Act
+        let result = store.change_password(PW, "corta");
+
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn change_password_requires_unlocked_vault() {
+        // Arrange
+        let mut store = Store::load(tmp_path("change-locked")).unwrap();
+
+        // Act
+        let result = store.change_password(PW, "nuova-password-12");
+
+        // Assert
+        assert_eq!(result.unwrap_err(), ERR_LOCKED);
+    }
+
+    #[test]
+    fn each_write_uses_a_fresh_nonce() {
+        // Arrange
+        let path = tmp_path("nonce");
+        let mut store = unlocked(path.clone());
+        let before: VaultFile = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+
+        // Act
+        store.save(input(None, "GitHub")).unwrap();
+        let after: VaultFile = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+
+        // Assert
+        assert_ne!(before.nonce, after.nonce);
     }
 
     #[test]
@@ -201,7 +633,7 @@ mod tests {
     #[test]
     fn save_creates_new_entry_with_generated_id_and_equal_timestamps() {
         // Arrange
-        let mut store = Store::load(tmp_path("create")).unwrap();
+        let mut store = unlocked(tmp_path("create"));
 
         // Act
         let entry = store.save(input(None, "GitHub")).unwrap();
@@ -216,7 +648,7 @@ mod tests {
     #[test]
     fn save_trims_tags_and_drops_empty_ones() {
         // Arrange
-        let mut store = Store::load(tmp_path("tags")).unwrap();
+        let mut store = unlocked(tmp_path("tags"));
 
         // Act
         let entry = store.save(input(None, "GitHub")).unwrap();
@@ -228,7 +660,7 @@ mod tests {
     #[test]
     fn save_updates_existing_entry_keeping_id_and_created_at() {
         // Arrange
-        let mut store = Store::load(tmp_path("update")).unwrap();
+        let mut store = unlocked(tmp_path("update"));
         let original = store.save(input(None, "GitHub")).unwrap();
 
         // Act
@@ -245,7 +677,7 @@ mod tests {
     #[test]
     fn save_with_unknown_id_creates_entry_using_that_id() {
         // Arrange
-        let mut store = Store::load(tmp_path("unknown-id")).unwrap();
+        let mut store = unlocked(tmp_path("unknown-id"));
         let id = Uuid::new_v4();
 
         // Act
@@ -259,7 +691,7 @@ mod tests {
     #[test]
     fn save_rejects_blank_service() {
         // Arrange
-        let mut store = Store::load(tmp_path("blank-service")).unwrap();
+        let mut store = unlocked(tmp_path("blank-service"));
 
         // Act
         let result = store.save(input(None, "   "));
@@ -272,7 +704,7 @@ mod tests {
     #[test]
     fn save_rejects_blank_username() {
         // Arrange
-        let mut store = Store::load(tmp_path("blank-user")).unwrap();
+        let mut store = unlocked(tmp_path("blank-user"));
         let mut data = input(None, "GitHub");
         data.username = "".into();
 
@@ -288,11 +720,11 @@ mod tests {
     fn save_persists_to_disk_and_survives_reload() {
         // Arrange
         let path = tmp_path("persist");
-        let mut store = Store::load(path.clone()).unwrap();
+        let mut store = unlocked(path.clone());
 
         // Act
         let entry = store.save(input(None, "GitHub")).unwrap();
-        let reloaded = Store::load(path).unwrap();
+        let reloaded = reopen(path);
 
         // Assert
         assert_eq!(reloaded.list().len(), 1);
@@ -304,7 +736,7 @@ mod tests {
     fn save_leaves_no_temporary_file_behind() {
         // Arrange
         let path = tmp_path("no-tmp");
-        let mut store = Store::load(path.clone()).unwrap();
+        let mut store = unlocked(path.clone());
 
         // Act
         store.save(input(None, "GitHub")).unwrap();
@@ -316,11 +748,10 @@ mod tests {
 
     #[test]
     fn save_rolls_back_memory_state_when_write_fails() {
-        // Arrange: cartella inesistente => la scrittura fallisce
-        let path = std::env::temp_dir()
-            .join(format!("forziere-absent-{}", Uuid::new_v4()))
-            .join("vault.json");
-        let mut store = Store::load(path).unwrap();
+        // Arrange: dopo il setup rimuovo la cartella cosi la scrittura fallisce
+        let path = tmp_path("save-rollback");
+        let mut store = unlocked(path.clone());
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
 
         // Act
         let result = store.save(input(None, "GitHub"));
@@ -333,7 +764,7 @@ mod tests {
     #[test]
     fn delete_removes_only_the_requested_entry() {
         // Arrange
-        let mut store = Store::load(tmp_path("delete")).unwrap();
+        let mut store = unlocked(tmp_path("delete"));
         let keep = store.save(input(None, "Keep")).unwrap();
         let drop = store.save(input(None, "Drop")).unwrap();
 
@@ -349,7 +780,7 @@ mod tests {
     #[test]
     fn delete_unknown_id_is_a_noop() {
         // Arrange
-        let mut store = Store::load(tmp_path("delete-unknown")).unwrap();
+        let mut store = unlocked(tmp_path("delete-unknown"));
         store.save(input(None, "Keep")).unwrap();
 
         // Act
@@ -364,12 +795,12 @@ mod tests {
     fn delete_persists_to_disk() {
         // Arrange
         let path = tmp_path("delete-persist");
-        let mut store = Store::load(path.clone()).unwrap();
+        let mut store = unlocked(path.clone());
         let entry = store.save(input(None, "GitHub")).unwrap();
 
         // Act
         store.delete(entry.id).unwrap();
-        let reloaded = Store::load(path).unwrap();
+        let reloaded = reopen(path);
 
         // Assert
         assert!(reloaded.list().is_empty());
@@ -379,7 +810,7 @@ mod tests {
     fn delete_rolls_back_memory_state_when_write_fails() {
         // Arrange: dopo il salvataggio rimuovo la cartella cosi la scrittura fallisce
         let path = tmp_path("delete-rollback");
-        let mut store = Store::load(path.clone()).unwrap();
+        let mut store = unlocked(path.clone());
         let entry = store.save(input(None, "GitHub")).unwrap();
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
 

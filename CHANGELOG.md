@@ -7,9 +7,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 ## [Unreleased]
 
 ### Changed
+- 2026-11-02: `list`/`save`/`delete` richiedono il vault sbloccato; `vault.json` non è più in chiaro (README, guida di installazione e CLAUDE.md aggiornati).
 - 2026-11-02: progetto rinominato in **Forziere** (crate `forziere`, lib `forziere_lib`, productName, titolo finestra e pagina, identificativo `com.giorgio-marini.forziere`); corretto il refuso "mamanger"; documentazione aggiornata.
 
 ### Added
+- 2026-11-02: master password e cifratura del vault: nuovo `crypto.rs` (Argon2id + AES-256-GCM, nonce nuovo a ogni scrittura, header autenticato), `Store` a stati con formato `vault.json` v2, migrazione sul posto del vault in chiaro, comandi `vault_status`/`setup_vault`/`unlock`/`lock`/`change_password`; UI `UnlockScreen` e `ChangePassword`, pulsanti Blocca e Cambia password; 36 test Rust e 31 frontend nuovi (AAA). Nessun recupero della password.
 - 2026-11-02: licenza MIT (`LICENSE`), metadati `license`/`repository`/`authors` in `Cargo.toml` e `package.json`, per la pubblicazione open source su GitHub.
 - 2026-11-02: migrazione automatica di `vault.json` dalla vecchia cartella dati (`com.giorgio-marini.fcs-password-mamanger`) alla nuova, senza sovrascrivere né cancellare il vecchio file; 3 test AAA.
 

@@ -1,6 +1,6 @@
 # TODO – Avanzamento lavori
 
-Ultimo aggiornamento: 2026-10-23 – versione corrente: 1.0.0
+Ultimo aggiornamento: 2026-11-02 – versione corrente: 1.0.0
 
 ## Fase 0 – Documentazione
 - [x] README.md
@@ -47,10 +47,17 @@ Ultimo aggiornamento: 2026-10-23 – versione corrente: 1.0.0
 
 ## Fase 6 – Icona
 - [x] Icona SVG + set completo Tauri, favicon, verifica nel pacchetto .deb
-- [ ] Verifica visiva dell'icona su desktop (menu applicazioni / barra)
+- [x] Verifica visiva dell'icona su desktop (menu applicazioni / barra)
+
+## Fase 7 – Master password e cifratura
+- [x] `crypto.rs`: Argon2id + AES-256-GCM, nonce nuovo a ogni scrittura, header autenticato (AAD)
+- [x] `store.rs` a stati (NoVault / LegacyPlaintext / Locked / Unlocked), formato v2, migrazione in chiaro → cifrato
+- [x] Comandi `vault_status`, `setup_vault`, `unlock`, `lock`, `change_password`
+- [x] Frontend: `UnlockScreen`, `ChangePassword`, pulsante Blocca in `App.vue`
+- [x] Test AAA Rust (72) e frontend (83); regressione verde
+- [ ] Prova manuale in finestra (setup, migrazione di un vault in chiaro, sblocco, blocca, cambio password)
 
 ## Futuro
-- [ ] Master password e cifratura del vault (Argon2 + AES-256-GCM)
 - [ ] Import/export (CSV/JSON)
 - [ ] Blocco automatico per inattività
 - [ ] Svuotamento automatico degli appunti

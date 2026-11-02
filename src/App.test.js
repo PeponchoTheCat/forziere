@@ -6,9 +6,23 @@ vi.mock("./api", () => ({
   saveEntry: vi.fn(),
   deleteEntry: vi.fn(),
   generatePassword: vi.fn(),
+  vaultStatus: vi.fn(),
+  setupVault: vi.fn(),
+  unlockVault: vi.fn(),
+  lockVault: vi.fn(),
+  changePassword: vi.fn(),
 }));
 
-import { deleteEntry, listEntries, saveEntry } from "./api";
+import {
+  changePassword,
+  deleteEntry,
+  listEntries,
+  lockVault,
+  saveEntry,
+  setupVault,
+  unlockVault,
+  vaultStatus,
+} from "./api";
 import App from "./App.vue";
 
 const entry = (id, service) => ({
@@ -34,6 +48,11 @@ describe("App", () => {
     listEntries.mockReset().mockResolvedValue([]);
     saveEntry.mockReset();
     deleteEntry.mockReset();
+    vaultStatus.mockReset().mockResolvedValue("unlocked");
+    setupVault.mockReset().mockResolvedValue(undefined);
+    unlockVault.mockReset().mockResolvedValue(undefined);
+    lockVault.mockReset().mockResolvedValue(undefined);
+    changePassword.mockReset().mockResolvedValue(undefined);
     vi.spyOn(window, "confirm").mockReturnValue(true);
   });
 
@@ -195,5 +214,178 @@ describe("App", () => {
 
     // Assert
     expect(wrapper.find(".error").exists()).toBe(false);
+  });
+
+  describe("vault lock", () => {
+    const fillPasswords = async (wrapper, values) => {
+      const inputs = wrapper.findAll("input[type=password]");
+      for (const [i, v] of values.entries()) await inputs[i].setValue(v);
+    };
+
+    it("does not load entries while the vault is locked", async () => {
+      // Arrange
+      vaultStatus.mockResolvedValue("locked");
+
+      // Act
+      const wrapper = await mountApp();
+
+      // Assert
+      expect(listEntries).not.toHaveBeenCalled();
+      expect(wrapper.text()).toContain("Vault bloccato");
+    });
+
+    it("shows the setup screen on first launch", async () => {
+      // Arrange
+      vaultStatus.mockResolvedValue("no_vault");
+
+      // Act
+      const wrapper = await mountApp();
+
+      // Assert
+      expect(wrapper.text()).toContain("Crea la master password");
+    });
+
+    it("shows the migration screen for a plaintext vault", async () => {
+      // Arrange
+      vaultStatus.mockResolvedValue("legacy_plaintext");
+
+      // Act
+      const wrapper = await mountApp();
+
+      // Assert
+      expect(wrapper.text()).toContain("Proteggi il vault");
+    });
+
+    it("unlocks with the typed password, then loads entries", async () => {
+      // Arrange
+      vaultStatus.mockResolvedValue("locked");
+      listEntries.mockResolvedValue([entry("1", "GitHub")]);
+      const wrapper = await mountApp();
+      await fillPasswords(wrapper, ["master-password-1"]);
+
+      // Act
+      await wrapper.find("form").trigger("submit");
+      await flushPromises();
+
+      // Assert
+      expect(unlockVault).toHaveBeenCalledWith("master-password-1");
+      expect(wrapper.findAll("li")).toHaveLength(1);
+    });
+
+    it("shows the error and stays locked when the password is wrong", async () => {
+      // Arrange
+      vaultStatus.mockResolvedValue("locked");
+      unlockVault.mockRejectedValue("Password errata o vault danneggiato");
+      const wrapper = await mountApp();
+      await fillPasswords(wrapper, ["sbagliata"]);
+
+      // Act
+      await wrapper.find("form").trigger("submit");
+      await flushPromises();
+
+      // Assert
+      expect(wrapper.find(".error").text()).toBe("Password errata o vault danneggiato");
+      expect(listEntries).not.toHaveBeenCalled();
+    });
+
+    it("creates the vault on first launch and then loads entries", async () => {
+      // Arrange
+      vaultStatus.mockResolvedValue("no_vault");
+      const wrapper = await mountApp();
+      await fillPasswords(wrapper, ["master-password-1", "master-password-1"]);
+
+      // Act
+      await wrapper.find("form").trigger("submit");
+      await flushPromises();
+
+      // Assert
+      expect(setupVault).toHaveBeenCalledWith("master-password-1");
+      expect(listEntries).toHaveBeenCalled();
+    });
+
+    it("lock button clears entries and returns to the unlock screen", async () => {
+      // Arrange
+      listEntries.mockResolvedValue([entry("1", "GitHub")]);
+      const wrapper = await mountApp();
+      await wrapper.find("li").trigger("click");
+
+      // Act
+      const lockButton = wrapper.findAll("button").find((b) => b.text() === "Blocca");
+      await lockButton.trigger("click");
+      await flushPromises();
+
+      // Assert
+      expect(lockVault).toHaveBeenCalled();
+      expect(wrapper.text()).toContain("Vault bloccato");
+      expect(wrapper.find("li").exists()).toBe(false);
+      expect(wrapper.text()).not.toContain("GitHub");
+    });
+
+    it("stays unlocked and shows the error when locking fails", async () => {
+      // Arrange
+      lockVault.mockRejectedValue("errore lock");
+      listEntries.mockResolvedValue([entry("1", "GitHub")]);
+      const wrapper = await mountApp();
+
+      // Act
+      const lockButton = wrapper.findAll("button").find((b) => b.text() === "Blocca");
+      await lockButton.trigger("click");
+      await flushPromises();
+
+      // Assert
+      expect(wrapper.find(".error").text()).toBe("errore lock");
+      expect(wrapper.findAll("li")).toHaveLength(1);
+    });
+
+    it("changes the master password from the dialog and closes it", async () => {
+      // Arrange
+      const wrapper = await mountApp();
+      const open = wrapper.findAll("button").find((b) => b.text() === "Cambia password");
+      await open.trigger("click");
+      const dialog = wrapper.find("[role=dialog]");
+      const inputs = dialog.findAll("input");
+      await inputs[0].setValue("master-password-1");
+      await inputs[1].setValue("nuova-password-12");
+      await inputs[2].setValue("nuova-password-12");
+
+      // Act
+      await dialog.trigger("submit");
+      await flushPromises();
+
+      // Assert
+      expect(changePassword).toHaveBeenCalledWith("master-password-1", "nuova-password-12");
+      expect(wrapper.find("[role=dialog]").exists()).toBe(false);
+    });
+
+    it("keeps the dialog open and shows the backend error on failure", async () => {
+      // Arrange
+      changePassword.mockRejectedValue("La password attuale non è corretta");
+      const wrapper = await mountApp();
+      const open = wrapper.findAll("button").find((b) => b.text() === "Cambia password");
+      await open.trigger("click");
+      const dialog = wrapper.find("[role=dialog]");
+      const inputs = dialog.findAll("input");
+      await inputs[0].setValue("sbagliata");
+      await inputs[1].setValue("nuova-password-12");
+      await inputs[2].setValue("nuova-password-12");
+
+      // Act
+      await dialog.trigger("submit");
+      await flushPromises();
+
+      // Assert
+      expect(wrapper.find("[role=dialog] .error").text()).toBe("La password attuale non è corretta");
+    });
+
+    it("shows the unlock screen when the status check fails", async () => {
+      // Arrange
+      vaultStatus.mockRejectedValue("errore di lettura");
+
+      // Act
+      const wrapper = await mountApp();
+
+      // Assert
+      expect(wrapper.find(".error").text()).toBe("errore di lettura");
+    });
   });
 });
