@@ -74,3 +74,7 @@ Le voci sono salvate in `vault.json` nella cartella dati dell'app (`app_data_dir
 - `docs/BUILD-E-INSTALLAZIONE.md` – build, installazione e rimozione per OS
 - `TODO.md` – avanzamento lavori
 - `CHANGELOG.md` – storico delle modifiche
+
+## Licenza
+
+Distribuito con licenza [MIT](LICENSE).

@@ -1,8 +1,10 @@
 [package]
 name = "forziere"
 version = "1.0.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Forziere: password manager desktop (Tauri + Vue)"
+authors = ["Giorgio Marini"]
+license = "MIT"
+repository = "https://github.com/PeponchoTheCat/forziere"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

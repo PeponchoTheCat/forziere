@@ -10,6 +10,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 - 2026-11-02: progetto rinominato in **Forziere** (crate `forziere`, lib `forziere_lib`, productName, titolo finestra e pagina, identificativo `com.giorgio-marini.forziere`); corretto il refuso "mamanger"; documentazione aggiornata.
 
 ### Added
+- 2026-11-02: licenza MIT (`LICENSE`), metadati `license`/`repository`/`authors` in `Cargo.toml` e `package.json`, per la pubblicazione open source su GitHub.
 - 2026-11-02: migrazione automatica di `vault.json` dalla vecchia cartella dati (`com.giorgio-marini.fcs-password-mamanger`) alla nuova, senza sovrascrivere né cancellare il vecchio file; 3 test AAA.
 
 ## [1.0.0] - 2026-10-23
