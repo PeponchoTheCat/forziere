@@ -25,7 +25,8 @@ Tests: Vitest + @vue/test-utils (jsdom) for the frontend, `cargo test` for Rust.
 npm test                    # frontend tests (vitest run); single file: npx vitest run src/App.test.js
 npm run test:coverage       # frontend coverage (v8)
 npm run test:rust           # Rust tests
-npm run regression          # FULL regression: frontend tests + Rust tests + vite build
+npm run audit:rust          # RustSec audit of src-tauri/Cargo.lock (needs `cargo install cargo-audit --locked` and network; fails only on vulnerabilities, unmaintained/yanked are warnings)
+npm run regression          # FULL regression: frontend tests + Rust tests + cargo audit + vite build
 ```
 
 No JS linter is configured.
