@@ -7,6 +7,9 @@ const LOWER: &str = "abcdefghijklmnopqrstuvwxyz";
 const DIGITS: &str = "0123456789";
 const SYMBOLS: &str = "!@#$%^&*()-_=+[]{};:,.<>?/~";
 
+// Codici di errore: il frontend li traduce (vedi `src/i18n/errors.js`).
+pub const ERR_NO_CLASS: &str = "no_char_class";
+
 pub const MIN_LENGTH: usize = 4;
 pub const MAX_LENGTH: usize = 128;
 
@@ -32,12 +35,10 @@ pub fn generate(opts: &GenOptions) -> Result<String, String> {
     .collect();
 
     if classes.is_empty() {
-        return Err("Seleziona almeno un tipo di carattere".into());
+        return Err(ERR_NO_CLASS.into());
     }
     if !(MIN_LENGTH..=MAX_LENGTH).contains(&opts.length) {
-        return Err(format!(
-            "La lunghezza deve essere tra {MIN_LENGTH} e {MAX_LENGTH}"
-        ));
+        return Err(format!("invalid_length:{MIN_LENGTH}:{MAX_LENGTH}"));
     }
 
     // `rand::rng()` è un CSPRNG inizializzato dal sistema operativo.
@@ -157,7 +158,7 @@ mod tests {
         let result = generate(&options);
 
         // Assert
-        assert_eq!(result.unwrap_err(), "Seleziona almeno un tipo di carattere");
+        assert_eq!(result.unwrap_err(), ERR_NO_CLASS);
     }
 
     #[test]
@@ -169,7 +170,7 @@ mod tests {
         let result = generate(&options);
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "invalid_length:4:128");
     }
 
     #[test]
@@ -181,7 +182,7 @@ mod tests {
         let result = generate(&options);
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "invalid_length:4:128");
     }
 
     #[test]

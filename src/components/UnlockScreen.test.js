@@ -15,7 +15,7 @@ describe("UnlockScreen", () => {
 
     // Assert
     expect(wrapper.findAll("input")).toHaveLength(1);
-    expect(wrapper.find("button").text()).toBe("Sblocca");
+    expect(wrapper.find("button").text()).toBe("Unlock");
   });
 
   it("setup mode asks for confirmation and warns there is no recovery", () => {
@@ -24,7 +24,7 @@ describe("UnlockScreen", () => {
 
     // Assert
     expect(wrapper.findAll("input")).toHaveLength(2);
-    expect(wrapper.text()).toContain("Non esiste recupero");
+    expect(wrapper.text()).toContain("There is no recovery");
   });
 
   it("migrate mode explains that the plaintext file will be encrypted", () => {
@@ -32,7 +32,7 @@ describe("UnlockScreen", () => {
     const wrapper = mount(UnlockScreen, { props: { mode: "migrate" } });
 
     // Assert
-    expect(wrapper.text()).toContain("in chiaro");
+    expect(wrapper.text()).toContain("in plaintext");
   });
 
   it("emits the password on unlock", async () => {
@@ -55,7 +55,7 @@ describe("UnlockScreen", () => {
 
     // Assert
     expect(wrapper.emitted("submit")).toBeUndefined();
-    expect(wrapper.find(".error").text()).toBe("Inserisci la master password");
+    expect(wrapper.find(".error").text()).toBe("Enter the master password");
   });
 
   it("rejects a too short password in setup", async () => {
@@ -67,7 +67,7 @@ describe("UnlockScreen", () => {
 
     // Assert
     expect(wrapper.emitted("submit")).toBeUndefined();
-    expect(wrapper.find(".error").text()).toContain("almeno 12");
+    expect(wrapper.find(".error").text()).toContain("at least 12");
   });
 
   it("rejects mismatching confirmation in setup", async () => {
@@ -79,7 +79,7 @@ describe("UnlockScreen", () => {
 
     // Assert
     expect(wrapper.emitted("submit")).toBeUndefined();
-    expect(wrapper.find(".error").text()).toContain("non coincidono");
+    expect(wrapper.find(".error").text()).toContain("do not match");
   });
 
   it("emits in setup when password is long enough and confirmed", async () => {

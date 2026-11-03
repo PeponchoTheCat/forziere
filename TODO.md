@@ -62,6 +62,13 @@ Ultimo aggiornamento: 2026-11-03 – versione corrente: 1.0.0
 - [x] `audit:rust` inserito in `npm run regression`
 - [x] `cargo-audit` installato; prima esecuzione: 0 vulnerabilità, 2 warning noti (`proc-macro-error` unmaintained RUSTSEC-2024-0370, `glib` 0.18.5 unsound RUSTSEC-2024-0429, dallo stack GTK3 di Tauri); regressione verde
 
+## Fase 9 – Multilingua (en predefinita, it)
+- [x] `vue-i18n`, `src/i18n/` (index, errors, `locales/en.json`, `locales/it.json`), `test-setup.js`
+- [x] Tutti i componenti tradotti; `LanguageSwitch` in barra e schermata di sblocco; scelta in `localStorage`
+- [x] Errori Rust come codici + `translateError`; test Rust e frontend aggiornati (104 frontend, 72 Rust)
+- [x] Test di parità chiavi en/it; regressione verde
+- [ ] Prova manuale in finestra (primo avvio in inglese, cambio lingua, riavvio, errori tradotti)
+
 ## Futuro
 - [ ] Import/export (CSV/JSON)
 - [ ] Blocco automatico per inattività

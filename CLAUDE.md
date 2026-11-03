@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Forziere: desktop password manager (Tauri 2 + Vue 3, JavaScript, no TypeScript). Stores entries (service, URL, username, password, notes, tags) and generates secure passwords with configurable length and character classes (upper, lower, digits, symbols). UI/docs are in Italian. Not a git repository yet.
+Forziere: desktop password manager (Tauri 2 + Vue 3, JavaScript, no TypeScript). Stores entries (service, URL, username, password, notes, tags) and generates secure passwords with configurable length and character classes (upper, lower, digits, symbols). UI is multilingual (vue-i18n): **English default**, Italian selectable; project docs (`TODO.md`, `CHANGELOG.md`, `docs/`) are in Italian, `README.md` in English with `README.it.md`.
 
 Work progress is tracked in `TODO.md` and `CHANGELOG.md` (Keep a Changelog, `[Unreleased]`): update both when completing a step. The planned design lives in `~/.claude/plans/voglio-scrivere-una-applicazione-mutable-ember.md`; phases 1 (backend) and 2 (Vue UI) are done; unit tests are in place for both; master-password encryption is implemented, unit-tested and manually verified in `npm run tauri dev`.
 
@@ -43,6 +43,11 @@ No JS linter is configured.
 - **Frontend** `src/` (Vue 3 `<script setup>`, Vite). Talks to Rust only via `invoke` from `@tauri-apps/api/core`; planned to be wrapped in `src/api.js`.
 - **Backend** `src-tauri/src/`: `main.rs` just calls `forziere_lib::run()`; all setup (plugins, `invoke_handler`, managed state) goes in `lib.rs`. Every new Tauri command must be registered in `generate_handler![...]`.
 - **Persistence**: `vault.json` in `app_data_dir()`, **encrypted** (v2: Argon2id + AES-256-GCM, see `crypto.rs`), written atomically (tmp file + rename), held in a `Mutex<Store>` managed state. `Store` (in `store.rs`) is a state machine `NoVault | LegacyPlaintext | Locked | Unlocked` (commands `vault_status`, `setup_vault`, `unlock`, `lock`, `change_password`); entries are readable only while unlocked, and the key is a `Zeroizing` buffer. A v1 plaintext array file is encrypted in place by `setup_vault`. No password recovery by design. Under `cfg(test)` the KDF uses minimal costs. Passwords must be generated in Rust with a CSPRNG, guaranteeing at least one char per selected class.
+
+## i18n
+
+- Texts live in `src/i18n/locales/en.json` and `it.json`; every new UI string goes in **both** (a test enforces identical keys/placeholders). Use `t("area.key")` in components, never hard-coded text. Language is chosen with `LanguageSwitch` and saved in `localStorage` (`forziere.locale`); tests run in `en` (`src/test-setup.js`).
+- Rust errors are **codes**, not sentences: `code` or `code:arg1:arg2` (e.g. `vault_locked`, `invalid_length:4:128`). Add a matching `errors.<code>` key in both JSON files; the frontend translates with `translateError` (`src/i18n/errors.js`, unknown text passes through).
 
 ## Gotchas
 

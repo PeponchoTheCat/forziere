@@ -1,5 +1,8 @@
 <script setup>
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const MIN_LEN = 12;
 
@@ -17,11 +20,11 @@ const localError = ref("");
 function submit() {
   localError.value = "";
   if (!current.value) {
-    localError.value = "Inserisci la password attuale";
+    localError.value = t("change.currentRequired");
   } else if (next.value.length < MIN_LEN) {
-    localError.value = `La nuova password deve avere almeno ${MIN_LEN} caratteri`;
+    localError.value = t("change.tooShort", { min: MIN_LEN });
   } else if (next.value !== confirm.value) {
-    localError.value = "Le due password non coincidono";
+    localError.value = t("change.mismatch");
   } else {
     emit("submit", { current: current.value, next: next.value });
   }
@@ -30,24 +33,24 @@ function submit() {
 
 <template>
   <div class="backdrop" @click.self="emit('cancel')">
-    <form role="dialog" aria-label="Cambia master password" @submit.prevent="submit">
-      <h2>Cambia master password</h2>
+    <form role="dialog" :aria-label="t('change.title')" @submit.prevent="submit">
+      <h2>{{ t("change.title") }}</h2>
       <label>
-        Password attuale
+        {{ t("change.current") }}
         <input v-model="current" type="password" autocomplete="off" />
       </label>
       <label>
-        Nuova password
+        {{ t("change.next") }}
         <input v-model="next" type="password" autocomplete="off" />
       </label>
       <label>
-        Conferma nuova password
+        {{ t("change.confirm") }}
         <input v-model="confirm" type="password" autocomplete="off" />
       </label>
       <p v-if="localError || error" class="error">{{ localError || error }}</p>
       <div class="actions">
-        <button type="button" @click="emit('cancel')">Annulla</button>
-        <button class="primary" type="submit" :disabled="busy">Cambia</button>
+        <button type="button" @click="emit('cancel')">{{ t("change.cancel") }}</button>
+        <button class="primary" type="submit" :disabled="busy">{{ t("change.submit") }}</button>
       </div>
     </form>
   </div>

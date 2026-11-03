@@ -1,5 +1,8 @@
 <script setup>
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   entries: { type: Array, required: true },
@@ -24,10 +27,10 @@ const filtered = computed(() => {
 <template>
   <aside class="list">
     <div class="toolbar">
-      <input v-model="query" type="search" placeholder="Cerca..." title="Cerca per servizio, utente o tag" />
-      <button class="primary" @click="$emit('new')">+ Nuova</button>
+      <input v-model="query" type="search" :placeholder="t('list.searchPlaceholder')" :title="t('list.searchTitle')" />
+      <button class="primary" @click="$emit('new')">{{ t("list.new") }}</button>
     </div>
-    <p v-if="!filtered.length" class="empty">Nessuna voce.</p>
+    <p v-if="!filtered.length" class="empty">{{ t("list.empty") }}</p>
     <ul>
       <li
         v-for="e in filtered"

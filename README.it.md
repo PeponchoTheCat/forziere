@@ -17,10 +17,11 @@ Applicazione desktop (Tauri 2 + Vue 3) per storicizzare utenti e password associ
   - almeno un carattere per ogni classe selezionata; casualità da generatore crittografico.
 - Copia della password negli appunti, mostra/nascondi password.
 - Vault protetto da **master password**: cifratura AES-256-GCM, chiave derivata con Argon2id; pulsanti *Blocca* e *Cambia password*.
+- Interfaccia multilingua (inglese predefinito, italiano): selettore della lingua nella barra e nella schermata di sblocco; la scelta viene ricordata.
 
 ## Screenshot
 
-Schermate con dati di esempio inventati.
+Schermate con dati di esempio inventati, in interfaccia italiana.
 
 <p align="center">
   <img src="docs/screenshots/05-lista-e-voce.png" alt="Lista delle voci e form di modifica con il generatore di password" width="820">
