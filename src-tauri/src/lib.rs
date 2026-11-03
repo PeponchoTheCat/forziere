@@ -238,7 +238,7 @@ mod tests {
         let result = setup_vault(app.state(), "corta".into());
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "password_too_short:12");
         assert_eq!(vault_status(app.state()).unwrap(), VaultStatus::NoVault);
     }
 

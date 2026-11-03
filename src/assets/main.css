@@ -61,6 +61,7 @@ body::after {
 
 input,
 textarea,
+select,
 button {
   font-family: inherit;
   font-size: 1em;
@@ -80,7 +81,8 @@ textarea::placeholder {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: var(--green-bright);
   box-shadow: 0 0 10px #8fd6a055, inset 0 0 8px #8fd6a033;
 }

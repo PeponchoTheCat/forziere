@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import {
   changePassword,
   deleteEntry,
@@ -13,7 +14,11 @@ import {
 import ChangePassword from "./components/ChangePassword.vue";
 import EntryForm from "./components/EntryForm.vue";
 import EntryList from "./components/EntryList.vue";
+import LanguageSwitch from "./components/LanguageSwitch.vue";
 import UnlockScreen from "./components/UnlockScreen.vue";
+import { translateError } from "./i18n/errors";
+
+const { t } = useI18n();
 
 const entries = ref([]);
 const selectedId = ref(null);
@@ -35,7 +40,7 @@ async function load() {
   try {
     entries.value = await listEntries();
   } catch (e) {
-    error.value = String(e);
+    error.value = translateError(e);
   }
 }
 
@@ -52,19 +57,19 @@ async function save(input) {
     await load();
     selectedId.value = saved.id;
   } catch (e) {
-    error.value = String(e);
+    error.value = translateError(e);
   }
 }
 
 async function remove(id) {
-  if (!window.confirm("Eliminare definitivamente questa voce?")) return;
+  if (!window.confirm(t("app.confirmDelete"))) return;
   error.value = "";
   try {
     await deleteEntry(id);
     selectedId.value = null;
     await load();
   } catch (e) {
-    error.value = String(e);
+    error.value = translateError(e);
   }
 }
 
@@ -77,7 +82,7 @@ async function submitPassword(password) {
     status.value = "unlocked";
     await load();
   } catch (e) {
-    authError.value = String(e);
+    authError.value = translateError(e);
   } finally {
     busy.value = false;
   }
@@ -87,7 +92,7 @@ async function lock() {
   try {
     await lockVault();
   } catch (e) {
-    error.value = String(e);
+    error.value = translateError(e);
     return;
   }
   // nessuna voce deve restare nello stato Vue o nel form
@@ -106,7 +111,7 @@ async function submitChange({ current, next }) {
     await changePassword(current, next);
     showChange.value = false;
   } catch (e) {
-    authError.value = String(e);
+    authError.value = translateError(e);
   } finally {
     busy.value = false;
   }
@@ -121,7 +126,7 @@ onMounted(async () => {
   try {
     status.value = await vaultStatus();
   } catch (e) {
-    authError.value = String(e);
+    authError.value = translateError(e);
     status.value = "locked";
     return;
   }
@@ -141,8 +146,9 @@ onMounted(async () => {
     <header class="bar">
       <strong>Forziere</strong>
       <span class="spacer" />
-      <button @click="openChange">Cambia password</button>
-      <button @click="lock">Blocca</button>
+      <LanguageSwitch />
+      <button @click="openChange">{{ t("app.changePassword") }}</button>
+      <button @click="lock">{{ t("app.lock") }}</button>
     </header>
     <main class="app">
       <EntryList

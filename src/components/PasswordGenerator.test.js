@@ -85,14 +85,14 @@ describe("PasswordGenerator", () => {
     const wrapper = mount(PasswordGenerator);
     await buttons(wrapper)[0].trigger("click");
     await flushPromises();
-    generatePassword.mockRejectedValueOnce("Seleziona almeno un tipo di carattere");
+    generatePassword.mockRejectedValueOnce("no_char_class");
 
     // Act
     await buttons(wrapper)[0].trigger("click");
     await flushPromises();
 
     // Assert
-    expect(wrapper.find(".error").text()).toBe("Seleziona almeno un tipo di carattere");
+    expect(wrapper.find(".error").text()).toBe("Select at least one character type");
     expect(wrapper.find("code.out").exists()).toBe(false);
   });
 

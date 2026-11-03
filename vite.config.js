@@ -9,8 +9,9 @@ export default defineConfig(() => ({
 
   test: {
     environment: "jsdom",
+    setupFiles: ["src/test-setup.js"],
     include: ["src/**/*.test.js"],
-    coverage: { provider: "v8", include: ["src/**/*.{js,vue}"], exclude: ["src/**/*.test.js", "src/main.js"] },
+    coverage: { provider: "v8", include: ["src/**/*.{js,vue}"], exclude: ["src/**/*.test.js", "src/test-setup.js", "src/main.js"] },
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

@@ -18,8 +18,16 @@ const KEY_LEN: usize = 32;
 const SALT_LEN: usize = 16;
 const NONCE_LEN: usize = 12;
 
-/// Messaggio unico per password errata e file manomesso (GCM non li distingue).
-pub const ERR_BAD_PASSWORD: &str = "Password errata o vault danneggiato";
+// Codici di errore: il frontend li traduce (vedi `src/i18n/errors.js`).
+// Formato: `codice` oppure `codice:arg1:arg2`.
+
+/// Codice unico per password errata e file manomesso (GCM non li distingue).
+pub const ERR_BAD_PASSWORD: &str = "bad_password";
+pub const ERR_KDF_UNSUPPORTED: &str = "kdf_unsupported";
+pub const ERR_KDF_INVALID_PARAMS: &str = "kdf_invalid_params";
+pub const ERR_KDF_FAILED: &str = "kdf_failed";
+pub const ERR_ENCRYPT_FAILED: &str = "encrypt_failed";
+pub const ERR_VERSION_UNSUPPORTED: &str = "vault_version_unsupported";
 
 pub type Key = Zeroizing<[u8; KEY_LEN]>;
 
@@ -80,17 +88,17 @@ impl VaultFile {
 /// Deriva la chiave a 32 byte dalla master password.
 pub fn derive_key(password: &str, kdf: &KdfParams) -> Result<Key, String> {
     if kdf.alg != "argon2id" {
-        return Err(format!("Algoritmo KDF non supportato: {}", kdf.alg));
+        return Err(ERR_KDF_UNSUPPORTED.to_string());
     }
     let salt = B64
         .decode(&kdf.salt)
-        .map_err(|_| "Salt non valido".to_string())?;
+        .map_err(|_| ERR_KDF_INVALID_PARAMS.to_string())?;
     let params = Params::new(kdf.m, kdf.t, kdf.p, Some(KEY_LEN))
-        .map_err(|e| format!("Parametri KDF non validi: {e}"))?;
+        .map_err(|_| ERR_KDF_INVALID_PARAMS.to_string())?;
     let mut key = Zeroizing::new([0u8; KEY_LEN]);
     Argon2::new(Algorithm::Argon2id, Version::V0x13, params)
         .hash_password_into(password.as_bytes(), &salt, key.as_mut())
-        .map_err(|e| format!("Derivazione chiave fallita: {e}"))?;
+        .map_err(|_| ERR_KDF_FAILED.to_string())?;
     Ok(key)
 }
 
@@ -108,7 +116,7 @@ pub fn encrypt(key: &Key, kdf: &KdfParams, plaintext: &[u8]) -> Result<VaultFile
                 aad: &aad,
             },
         )
-        .map_err(|_| "Cifratura fallita".to_string())?;
+        .map_err(|_| ERR_ENCRYPT_FAILED.to_string())?;
     Ok(VaultFile {
         version: FORMAT_VERSION,
         kdf: kdf.clone(),
@@ -121,7 +129,7 @@ pub fn encrypt(key: &Key, kdf: &KdfParams, plaintext: &[u8]) -> Result<VaultFile
 pub fn decrypt(key: &Key, file: &VaultFile) -> Result<Zeroizing<Vec<u8>>, String> {
     let bad = || ERR_BAD_PASSWORD.to_string();
     if file.version != FORMAT_VERSION {
-        return Err(format!("Versione del vault non supportata: {}", file.version));
+        return Err(ERR_VERSION_UNSUPPORTED.to_string());
     }
     let nonce: [u8; NONCE_LEN] = B64
         .decode(&file.nonce)
@@ -230,7 +238,7 @@ mod tests {
         let result = decrypt(&key, &file);
 
         // Assert
-        assert!(result.unwrap_err().contains("non supportata"));
+        assert_eq!(result.unwrap_err(), ERR_VERSION_UNSUPPORTED);
     }
 
     #[test]
@@ -285,7 +293,7 @@ mod tests {
         let result = derive_key("master-password-1", &kdf);
 
         // Assert
-        assert!(result.unwrap_err().contains("non supportato"));
+        assert_eq!(result.unwrap_err(), ERR_KDF_UNSUPPORTED);
     }
 
     #[test]

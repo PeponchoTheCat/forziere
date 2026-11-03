@@ -7,10 +7,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 ## [Unreleased]
 
 ### Changed
+- 2026-11-03: gli errori del backend Rust non sono più frasi italiane ma codici (`vault_locked`, `bad_password`, `password_too_short:12`, `invalid_length:4:128`, …) tradotti dal frontend; i test Rust confrontano il codice esatto.
 - 2026-11-02: `list`/`save`/`delete` richiedono il vault sbloccato; `vault.json` non è più in chiaro (README, guida di installazione e CLAUDE.md aggiornati).
 - 2026-11-02: progetto rinominato in **Forziere** (crate `forziere`, lib `forziere_lib`, productName, titolo finestra e pagina, identificativo `com.giorgio-marini.forziere`); corretto il refuso "mamanger"; documentazione aggiornata.
 
 ### Added
+- 2026-11-03: UI multilingua con `vue-i18n`: inglese (predefinita) e italiano, traduzioni in `src/i18n/locales/{en,it}.json`, selettore di lingua (`LanguageSwitch`) nella barra e nella schermata di sblocco, scelta salvata in `localStorage`; `translateError` per i codici di errore del backend. Test AAA per i18n, selettore, errori e parità delle chiavi tra le due lingue (104 test frontend).
 - 2026-11-03: README in inglese come predefinito (`README.md`); la versione italiana è in `README.it.md`, con link reciproci.
 - 2026-11-03: audit delle dipendenze Rust contro RustSec: `scripts/audit-rust.sh` e script `npm run audit:rust`, incluso in `npm run regression` (tra test Rust e build). Fallisce solo per vulnerabilità note; richiede `cargo-audit` e rete (README e CLAUDE.md aggiornati).
 - 2026-11-02: master password e cifratura del vault: nuovo `crypto.rs` (Argon2id + AES-256-GCM, nonce nuovo a ogni scrittura, header autenticato), `Store` a stati con formato `vault.json` v2, migrazione sul posto del vault in chiaro, comandi `vault_status`/`setup_vault`/`unlock`/`lock`/`change_password`; UI `UnlockScreen` e `ChangePassword`, pulsanti Blocca e Cambia password; 36 test Rust e 31 frontend nuovi (AAA). Nessun recupero della password. Verificato a mano dall'utente (migrazione, blocca/sblocco, cambio password, riavvio).

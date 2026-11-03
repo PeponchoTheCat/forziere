@@ -1,0 +1,89 @@
+{
+  "app": {
+    "title": "Forziere",
+    "changePassword": "Change password",
+    "lock": "Lock",
+    "confirmDelete": "Permanently delete this entry?"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "unlock": {
+    "titleSetup": "Create the master password",
+    "titleMigrate": "Protect the vault",
+    "titleUnlock": "Vault locked",
+    "hintSetup": "Protects all entries with AES-256 encryption. {noRecovery}: if you forget it, the data is lost.",
+    "hintMigrate": "The existing vault is in plaintext. Choose a master password: the entries will be encrypted and the plaintext file replaced. {noRecovery} if you forget it.",
+    "noRecovery": "There is no recovery",
+    "masterPassword": "Master password",
+    "confirmPassword": "Confirm password",
+    "busy": "Please wait...",
+    "unlock": "Unlock",
+    "encrypt": "Encrypt and continue",
+    "tooShort": "The master password must be at least {min} characters long",
+    "mismatch": "The two passwords do not match",
+    "required": "Enter the master password"
+  },
+  "change": {
+    "title": "Change master password",
+    "current": "Current password",
+    "next": "New password",
+    "confirm": "Confirm new password",
+    "cancel": "Cancel",
+    "submit": "Change",
+    "currentRequired": "Enter the current password",
+    "tooShort": "The new password must be at least {min} characters long",
+    "mismatch": "The two passwords do not match"
+  },
+  "form": {
+    "titleEdit": "Edit entry",
+    "titleNew": "New entry",
+    "service": "Service *",
+    "url": "URL",
+    "username": "Username *",
+    "password": "Password",
+    "show": "Show",
+    "hide": "Hide",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "tags": "Tags (comma separated)",
+    "tagsPlaceholder": "work, web",
+    "notes": "Notes",
+    "save": "Save",
+    "delete": "Delete"
+  },
+  "list": {
+    "searchPlaceholder": "Search...",
+    "searchTitle": "Search by service, username or tag",
+    "new": "+ New",
+    "empty": "No entries."
+  },
+  "generator": {
+    "title": "Password generator",
+    "length": "Characters:",
+    "uppercase": "Uppercase",
+    "lowercase": "Lowercase",
+    "digits": "Digits",
+    "symbols": "Special characters",
+    "generate": "Generate",
+    "use": "Use this password"
+  },
+  "errors": {
+    "vault_locked": "Vault locked",
+    "bad_password": "Wrong password or damaged vault",
+    "wrong_current_password": "The current password is not correct",
+    "password_too_short": "The master password must be at least {0} characters long",
+    "vault_exists": "The vault already exists",
+    "already_unlocked": "Vault already unlocked",
+    "no_vault_to_unlock": "No encrypted vault to unlock",
+    "entry_required_fields": "Service and username are required",
+    "no_char_class": "Select at least one character type",
+    "invalid_length": "The length must be between {0} and {1}",
+    "kdf_unsupported": "Unsupported KDF algorithm",
+    "kdf_invalid_params": "Invalid KDF parameters",
+    "kdf_failed": "Key derivation failed",
+    "vault_version_unsupported": "Unsupported vault version",
+    "encrypt_failed": "Encryption failed",
+    "vault_format_unknown": "Unrecognised vault format"
+  }
+}

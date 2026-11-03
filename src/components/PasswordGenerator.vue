@@ -1,6 +1,10 @@
 <script setup>
 import { reactive, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { generatePassword } from "../api";
+import { translateError } from "../i18n/errors";
+
+const { t } = useI18n();
 
 const emit = defineEmits(["use"]);
 
@@ -20,28 +24,28 @@ async function generate() {
     generated.value = await generatePassword({ ...opts, length: Number(opts.length) });
   } catch (e) {
     generated.value = "";
-    error.value = String(e);
+    error.value = translateError(e);
   }
 }
 </script>
 
 <template>
   <fieldset class="gen">
-    <legend>Generatore password</legend>
+    <legend>{{ t("generator.title") }}</legend>
     <label class="len">
-      Caratteri: <strong>{{ opts.length }}</strong>
+      {{ t("generator.length") }} <strong>{{ opts.length }}</strong>
       <input v-model="opts.length" type="range" min="4" max="128" />
     </label>
     <div class="checks">
-      <label><input v-model="opts.uppercase" type="checkbox" /> Maiuscole</label>
-      <label><input v-model="opts.lowercase" type="checkbox" /> Minuscole</label>
-      <label><input v-model="opts.digits" type="checkbox" /> Numeri</label>
-      <label><input v-model="opts.symbols" type="checkbox" /> Caratteri speciali</label>
+      <label><input v-model="opts.uppercase" type="checkbox" /> {{ t("generator.uppercase") }}</label>
+      <label><input v-model="opts.lowercase" type="checkbox" /> {{ t("generator.lowercase") }}</label>
+      <label><input v-model="opts.digits" type="checkbox" /> {{ t("generator.digits") }}</label>
+      <label><input v-model="opts.symbols" type="checkbox" /> {{ t("generator.symbols") }}</label>
     </div>
     <div class="actions">
-      <button type="button" @click="generate">Genera</button>
+      <button type="button" @click="generate">{{ t("generator.generate") }}</button>
       <button type="button" class="primary" :disabled="!generated" @click="emit('use', generated)">
-        Usa questa password
+        {{ t("generator.use") }}
       </button>
     </div>
     <code v-if="generated" class="out">{{ generated }}</code>

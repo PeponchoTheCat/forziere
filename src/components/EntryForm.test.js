@@ -18,7 +18,7 @@ const existing = {
   updated_at: "2026-10-23T00:00:00Z",
 };
 
-// ordine nel DOM: servizio, url, utente, password, [generatore], tag, note
+// DOM order: service, url, username, password, [generator], tags, notes
 const field = (wrapper, label) =>
   wrapper.findAll("label").find((l) => l.text().startsWith(label)).find("input, textarea");
 const passwordInput = (wrapper) => field(wrapper, "Password");
@@ -42,9 +42,9 @@ describe("EntryForm", () => {
     const wrapper = mount(EntryForm, { props: { entry: null } });
 
     // Assert
-    expect(wrapper.find("h2").text()).toBe("Nuova voce");
-    expect(field(wrapper, "Servizio").element.value).toBe("");
-    expect(wrapper.text()).not.toContain("Elimina");
+    expect(wrapper.find("h2").text()).toBe("New entry");
+    expect(field(wrapper, "Service").element.value).toBe("");
+    expect(wrapper.text()).not.toContain("Delete");
   });
 
   it("prefills fields and joins tags when editing an entry", () => {
@@ -52,10 +52,10 @@ describe("EntryForm", () => {
     const wrapper = mount(EntryForm, { props: { entry: existing } });
 
     // Assert
-    expect(wrapper.find("h2").text()).toBe("Modifica voce");
-    expect(field(wrapper, "Servizio").element.value).toBe("GitHub");
+    expect(wrapper.find("h2").text()).toBe("Edit entry");
+    expect(field(wrapper, "Service").element.value).toBe("GitHub");
     expect(field(wrapper, "URL").element.value).toBe("https://github.com");
-    expect(field(wrapper, "Utente").element.value).toBe("mario");
+    expect(field(wrapper, "Username").element.value).toBe("mario");
     expect(passwordInput(wrapper).element.value).toBe("pw");
     expect(field(wrapper, "Tag").element.value).toBe("dev, lavoro");
     expect(field(wrapper, "Note").element.value).toBe("nota");
@@ -69,7 +69,7 @@ describe("EntryForm", () => {
     await wrapper.setProps({ entry: null });
 
     // Assert
-    expect(field(wrapper, "Servizio").element.value).toBe("");
+    expect(field(wrapper, "Service").element.value).toBe("");
   });
 
   it("hides the password by default and toggles visibility", async () => {
@@ -78,18 +78,18 @@ describe("EntryForm", () => {
     const initialType = passwordInput(wrapper).attributes("type");
 
     // Act
-    await button(wrapper, "Mostra").trigger("click");
+    await button(wrapper, "Show").trigger("click");
 
     // Assert
     expect(initialType).toBe("password");
     expect(passwordInput(wrapper).attributes("type")).toBe("text");
-    expect(button(wrapper, "Nascondi")).toBeDefined();
+    expect(button(wrapper, "Hide")).toBeDefined();
   });
 
   it("resets password visibility when switching entry", async () => {
     // Arrange
     const wrapper = mount(EntryForm, { props: { entry: existing } });
-    await button(wrapper, "Mostra").trigger("click");
+    await button(wrapper, "Show").trigger("click");
 
     // Act
     await wrapper.setProps({ entry: { ...existing, id: "id-2" } });
@@ -104,15 +104,15 @@ describe("EntryForm", () => {
     const wrapper = mount(EntryForm, { props: { entry: existing } });
 
     // Act
-    await button(wrapper, "Copia").trigger("click");
+    await button(wrapper, "Copy").trigger("click");
     await vi.advanceTimersByTimeAsync(0);
     const during = wrapper.text();
     await vi.advanceTimersByTimeAsync(1600);
 
     // Assert
     expect(writeText).toHaveBeenCalledWith("pw");
-    expect(during).toContain("Copiata!");
-    expect(wrapper.text()).not.toContain("Copiata!");
+    expect(during).toContain("Copied!");
+    expect(wrapper.text()).not.toContain("Copied!");
   });
 
   it("does not show copy feedback when the clipboard write fails", async () => {
@@ -121,11 +121,11 @@ describe("EntryForm", () => {
     const wrapper = mount(EntryForm, { props: { entry: existing } });
 
     // Act
-    await button(wrapper, "Copia").trigger("click");
+    await button(wrapper, "Copy").trigger("click");
     await new Promise((r) => setTimeout(r, 0));
 
     // Assert
-    expect(wrapper.text()).not.toContain("Copiata!");
+    expect(wrapper.text()).not.toContain("Copied!");
   });
 
   it("disables the copy button when the password is empty", () => {
@@ -133,7 +133,7 @@ describe("EntryForm", () => {
     const wrapper = mount(EntryForm, { props: { entry: null } });
 
     // Assert
-    expect(button(wrapper, "Copia").attributes("disabled")).toBeDefined();
+    expect(button(wrapper, "Copy").attributes("disabled")).toBeDefined();
   });
 
   it("fills the password and reveals it when the generator emits use", async () => {
@@ -152,8 +152,8 @@ describe("EntryForm", () => {
   it("emits save with parsed tags and null id for a new entry", async () => {
     // Arrange
     const wrapper = mount(EntryForm, { props: { entry: null } });
-    await field(wrapper, "Servizio").setValue("GitLab");
-    await field(wrapper, "Utente").setValue("luigi");
+    await field(wrapper, "Service").setValue("GitLab");
+    await field(wrapper, "Username").setValue("luigi");
     await passwordInput(wrapper).setValue("p4ss");
     await field(wrapper, "Tag").setValue(" a , ,b ");
 
@@ -186,7 +186,7 @@ describe("EntryForm", () => {
     const wrapper = mount(EntryForm, { props: { entry: existing } });
 
     // Act
-    await button(wrapper, "Elimina").trigger("click");
+    await button(wrapper, "Delete").trigger("click");
 
     // Assert
     expect(wrapper.emitted("delete")).toEqual([["id-1"]]);
@@ -213,7 +213,7 @@ describe("EntryForm", () => {
     const wrapper = mount(EntryForm, { props: { entry: null } });
 
     // Assert
-    expect(field(wrapper, "Servizio").attributes("required")).toBeDefined();
-    expect(field(wrapper, "Utente").attributes("required")).toBeDefined();
+    expect(field(wrapper, "Service").attributes("required")).toBeDefined();
+    expect(field(wrapper, "Username").attributes("required")).toBeDefined();
   });
 });

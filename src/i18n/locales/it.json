@@ -1,0 +1,89 @@
+{
+  "app": {
+    "title": "Forziere",
+    "changePassword": "Cambia password",
+    "lock": "Blocca",
+    "confirmDelete": "Eliminare definitivamente questa voce?"
+  },
+  "language": {
+    "label": "Lingua"
+  },
+  "unlock": {
+    "titleSetup": "Crea la master password",
+    "titleMigrate": "Proteggi il vault",
+    "titleUnlock": "Vault bloccato",
+    "hintSetup": "Protegge tutte le voci con cifratura AES-256. {noRecovery}: se la dimentichi, i dati sono persi.",
+    "hintMigrate": "Il vault esistente è in chiaro. Scegli una master password: le voci verranno cifrate e il file in chiaro sostituito. {noRecovery} se la dimentichi.",
+    "noRecovery": "Non esiste recupero",
+    "masterPassword": "Master password",
+    "confirmPassword": "Conferma password",
+    "busy": "Attendere...",
+    "unlock": "Sblocca",
+    "encrypt": "Cifra e continua",
+    "tooShort": "La master password deve avere almeno {min} caratteri",
+    "mismatch": "Le due password non coincidono",
+    "required": "Inserisci la master password"
+  },
+  "change": {
+    "title": "Cambia master password",
+    "current": "Password attuale",
+    "next": "Nuova password",
+    "confirm": "Conferma nuova password",
+    "cancel": "Annulla",
+    "submit": "Cambia",
+    "currentRequired": "Inserisci la password attuale",
+    "tooShort": "La nuova password deve avere almeno {min} caratteri",
+    "mismatch": "Le due password non coincidono"
+  },
+  "form": {
+    "titleEdit": "Modifica voce",
+    "titleNew": "Nuova voce",
+    "service": "Servizio *",
+    "url": "URL",
+    "username": "Utente *",
+    "password": "Password",
+    "show": "Mostra",
+    "hide": "Nascondi",
+    "copy": "Copia",
+    "copied": "Copiata!",
+    "tags": "Tag (separati da virgola)",
+    "tagsPlaceholder": "lavoro, web",
+    "notes": "Note",
+    "save": "Salva",
+    "delete": "Elimina"
+  },
+  "list": {
+    "searchPlaceholder": "Cerca...",
+    "searchTitle": "Cerca per servizio, utente o tag",
+    "new": "+ Nuova",
+    "empty": "Nessuna voce."
+  },
+  "generator": {
+    "title": "Generatore password",
+    "length": "Caratteri:",
+    "uppercase": "Maiuscole",
+    "lowercase": "Minuscole",
+    "digits": "Numeri",
+    "symbols": "Caratteri speciali",
+    "generate": "Genera",
+    "use": "Usa questa password"
+  },
+  "errors": {
+    "vault_locked": "Vault bloccato",
+    "bad_password": "Password errata o vault danneggiato",
+    "wrong_current_password": "La password attuale non è corretta",
+    "password_too_short": "La master password deve avere almeno {0} caratteri",
+    "vault_exists": "Il vault esiste già",
+    "already_unlocked": "Vault già sbloccato",
+    "no_vault_to_unlock": "Nessun vault cifrato da sbloccare",
+    "entry_required_fields": "Servizio e utente sono obbligatori",
+    "no_char_class": "Seleziona almeno un tipo di carattere",
+    "invalid_length": "La lunghezza deve essere tra {0} e {1}",
+    "kdf_unsupported": "Algoritmo KDF non supportato",
+    "kdf_invalid_params": "Parametri KDF non validi",
+    "kdf_failed": "Derivazione della chiave fallita",
+    "vault_version_unsupported": "Versione del vault non supportata",
+    "encrypt_failed": "Cifratura fallita",
+    "vault_format_unknown": "Formato del vault non riconosciuto"
+  }
+}

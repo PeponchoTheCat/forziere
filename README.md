@@ -17,10 +17,11 @@ Desktop application (Tauri 2 + Vue 3) to store usernames and their passwords and
   - at least one character for each selected class; randomness from a cryptographic generator.
 - Copy the password to the clipboard, show/hide password.
 - Vault protected by a **master password**: AES-256-GCM encryption, key derived with Argon2id; *Lock* and *Change password* buttons.
+- Multilingual UI (English by default, Italian): language selector in the top bar and on the unlock screen; the choice is remembered.
 
 ## Screenshots
 
-Screenshots with made-up sample data. The UI is in Italian.
+Screenshots with made-up sample data, taken with the Italian UI.
 
 <p align="center">
   <img src="docs/screenshots/05-lista-e-voce.png" alt="Entry list and edit form with the password generator" width="820">

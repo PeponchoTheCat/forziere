@@ -1,6 +1,9 @@
 <script setup>
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import PasswordGenerator from "./PasswordGenerator.vue";
+
+const { t } = useI18n();
 
 const props = defineProps({
   entry: { type: Object, default: null }, // null = nuova voce
@@ -63,14 +66,14 @@ function useGenerated(pw) {
 
 <template>
   <form class="form" @submit.prevent="submit">
-    <h2 class="full">{{ entry ? "Modifica voce" : "Nuova voce" }}</h2>
+    <h2 class="full">{{ entry ? t("form.titleEdit") : t("form.titleNew") }}</h2>
 
-    <label>Servizio *<input v-model="form.service" required /></label>
-    <label>URL<input v-model="form.url" type="text" placeholder="https://..." /></label>
-    <label>Utente *<input v-model="form.username" required autocomplete="off" /></label>
+    <label>{{ t("form.service") }}<input v-model="form.service" required /></label>
+    <label>{{ t("form.url") }}<input v-model="form.url" type="text" placeholder="https://..." /></label>
+    <label>{{ t("form.username") }}<input v-model="form.username" required autocomplete="off" /></label>
 
     <label>
-      Password
+      {{ t("form.password") }}
       <div class="pw">
         <input
           v-model="form.password"
@@ -78,25 +81,25 @@ function useGenerated(pw) {
           autocomplete="off"
         />
         <button type="button" @click="showPassword = !showPassword">
-          {{ showPassword ? "Nascondi" : "Mostra" }}
+          {{ showPassword ? t("form.hide") : t("form.show") }}
         </button>
         <button type="button" :disabled="!form.password" @click="copyPassword">
-          {{ copied ? "Copiata!" : "Copia" }}
+          {{ copied ? t("form.copied") : t("form.copy") }}
         </button>
       </div>
     </label>
 
     <PasswordGenerator class="gen-slot" @use="useGenerated" />
 
-    <label>Tag (separati da virgola)<input v-model="form.tags" placeholder="lavoro, web" /></label>
-    <label>Note<textarea v-model="form.notes" rows="2"></textarea></label>
+    <label>{{ t("form.tags") }}<input v-model="form.tags" :placeholder="t('form.tagsPlaceholder')" /></label>
+    <label>{{ t("form.notes") }}<textarea v-model="form.notes" rows="2"></textarea></label>
 
     <p v-if="error" class="error full">{{ error }}</p>
 
     <div class="actions full">
-      <button type="submit" class="primary">Salva</button>
+      <button type="submit" class="primary">{{ t("form.save") }}</button>
       <button v-if="entry" type="button" class="danger" @click="emit('delete', entry.id)">
-        Elimina
+        {{ t("form.delete") }}
       </button>
     </div>
   </form>

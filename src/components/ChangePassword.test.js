@@ -29,7 +29,7 @@ describe("ChangePassword", () => {
 
     // Assert
     expect(wrapper.emitted("submit")).toBeUndefined();
-    expect(wrapper.find(".error").text()).toContain("attuale");
+    expect(wrapper.find(".error").text()).toContain("current");
   });
 
   it("rejects a too short new password", async () => {
@@ -41,7 +41,7 @@ describe("ChangePassword", () => {
 
     // Assert
     expect(wrapper.emitted("submit")).toBeUndefined();
-    expect(wrapper.find(".error").text()).toContain("almeno 12");
+    expect(wrapper.find(".error").text()).toContain("at least 12");
   });
 
   it("rejects mismatching confirmation", async () => {
@@ -53,7 +53,7 @@ describe("ChangePassword", () => {
 
     // Assert
     expect(wrapper.emitted("submit")).toBeUndefined();
-    expect(wrapper.find(".error").text()).toContain("non coincidono");
+    expect(wrapper.find(".error").text()).toContain("do not match");
   });
 
   it("emits cancel from the cancel button", async () => {

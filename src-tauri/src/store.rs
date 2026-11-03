@@ -55,7 +55,13 @@ pub fn migrate_legacy_vault(dir: &std::path::Path) -> io::Result<bool> {
 
 /// Lunghezza minima della master password.
 pub const MIN_PASSWORD_LEN: usize = 12;
-pub const ERR_LOCKED: &str = "Vault bloccato";
+pub const ERR_LOCKED: &str = "vault_locked";
+pub const ERR_VAULT_EXISTS: &str = "vault_exists";
+pub const ERR_ALREADY_UNLOCKED: &str = "already_unlocked";
+pub const ERR_NO_VAULT_TO_UNLOCK: &str = "no_vault_to_unlock";
+pub const ERR_WRONG_CURRENT_PASSWORD: &str = "wrong_current_password";
+pub const ERR_REQUIRED_FIELDS: &str = "entry_required_fields";
+pub const ERR_UNKNOWN_FORMAT: &str = "vault_format_unknown";
 
 /// Stato del vault visto dal frontend.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -94,9 +100,7 @@ fn invalid(e: impl std::fmt::Display) -> io::Error {
 
 fn check_new_password(password: &str) -> Result<(), String> {
     if password.chars().count() < MIN_PASSWORD_LEN {
-        return Err(format!(
-            "La master password deve avere almeno {MIN_PASSWORD_LEN} caratteri"
-        ));
+        return Err(format!("password_too_short:{MIN_PASSWORD_LEN}"));
     }
     Ok(())
 }
@@ -123,7 +127,7 @@ impl Store {
                 serde_json::from_str::<VaultFile>(&text).map_err(invalid)?;
                 Ok(State::Locked)
             }
-            _ => Err(invalid("formato del vault non riconosciuto")),
+            _ => Err(invalid(ERR_UNKNOWN_FORMAT)),
         }
     }
 
@@ -145,7 +149,7 @@ impl Store {
                 let text = fs::read_to_string(&self.path).map_err(|e| e.to_string())?;
                 serde_json::from_str(&text).map_err(|e| e.to_string())?
             }
-            _ => return Err("Il vault esiste già".into()),
+            _ => return Err(ERR_VAULT_EXISTS.into()),
         };
         check_new_password(password)?;
         let kdf = KdfParams::new_random();
@@ -159,8 +163,8 @@ impl Store {
     pub fn unlock(&mut self, password: &str) -> Result<(), String> {
         if !matches!(self.state, State::Locked) {
             return Err(match self.state {
-                State::Unlocked { .. } => "Vault già sbloccato".into(),
-                _ => "Nessun vault cifrato da sbloccare".to_string(),
+                State::Unlocked { .. } => ERR_ALREADY_UNLOCKED.into(),
+                _ => ERR_NO_VAULT_TO_UNLOCK.to_string(),
             });
         }
         let text = fs::read_to_string(&self.path).map_err(|e| e.to_string())?;
@@ -190,7 +194,7 @@ impl Store {
         };
         let candidate = crypto::derive_key(old, kdf)?;
         if candidate.as_ref() != key.as_ref() {
-            return Err("La password attuale non è corretta".into());
+            return Err(ERR_WRONG_CURRENT_PASSWORD.into());
         }
         check_new_password(new)?;
         let new_kdf = KdfParams::new_random();
@@ -217,7 +221,7 @@ impl Store {
             return Err(ERR_LOCKED.into());
         }
         if input.service.trim().is_empty() || input.username.trim().is_empty() {
-            return Err("Servizio e utente sono obbligatori".into());
+            return Err(ERR_REQUIRED_FIELDS.into());
         }
         let now = Utc::now();
         let tags = input
@@ -418,7 +422,7 @@ mod tests {
         let result = store.setup("corta");
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "password_too_short:12");
         assert_eq!(store.status(), VaultStatus::NoVault);
     }
 
@@ -433,7 +437,7 @@ mod tests {
         let result = store.setup("un-altra-password-1");
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ERR_VAULT_EXISTS);
         assert_eq!(store.status(), VaultStatus::Locked);
     }
 
@@ -563,7 +567,7 @@ mod tests {
         let result = store.change_password("sbagliata-sbagliata", "nuova-password-12");
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ERR_WRONG_CURRENT_PASSWORD);
     }
 
     #[test]
@@ -575,7 +579,7 @@ mod tests {
         let result = store.change_password(PW, "corta");
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "password_too_short:12");
     }
 
     #[test]
@@ -697,7 +701,7 @@ mod tests {
         let result = store.save(input(None, "   "));
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ERR_REQUIRED_FIELDS);
         assert!(store.list().is_empty());
     }
 
@@ -712,7 +716,7 @@ mod tests {
         let result = store.save(data);
 
         // Assert
-        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ERR_REQUIRED_FIELDS);
         assert!(store.list().is_empty());
     }
 
