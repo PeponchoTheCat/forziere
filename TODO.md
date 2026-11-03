@@ -1,6 +1,6 @@
 # TODO – Avanzamento lavori
 
-Ultimo aggiornamento: 2026-11-02 – versione corrente: 1.0.0
+Ultimo aggiornamento: 2026-11-03 – versione corrente: 1.0.0
 
 ## Fase 0 – Documentazione
 - [x] README.md
@@ -56,6 +56,11 @@ Ultimo aggiornamento: 2026-11-02 – versione corrente: 1.0.0
 - [x] Frontend: `UnlockScreen`, `ChangePassword`, pulsante Blocca in `App.vue`
 - [x] Test AAA Rust (72) e frontend (83); regressione verde
 - [x] Prova manuale in finestra (eseguita dall'utente, esito ok): migrazione di un vault in chiaro, voci intatte, blocca/sblocco con password errata e giusta, cambio password, riavvio con la nuova
+
+## Fase 8 – Audit dipendenze
+- [x] `scripts/audit-rust.sh` + `npm run audit:rust` (errore chiaro se manca `cargo-audit`)
+- [x] `audit:rust` inserito in `npm run regression`
+- [x] `cargo-audit` installato; prima esecuzione: 0 vulnerabilità, 2 warning noti (`proc-macro-error` unmaintained RUSTSEC-2024-0370, `glib` 0.18.5 unsound RUSTSEC-2024-0429, dallo stack GTK3 di Tauri); regressione verde
 
 ## Futuro
 - [ ] Import/export (CSV/JSON)

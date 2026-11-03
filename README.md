@@ -1,105 +1,109 @@
 # Forziere
 
-Applicazione desktop (Tauri 2 + Vue 3) per storicizzare utenti e password associate e generare password sicure.
+**English** · [Italiano](README.it.md)
 
-## Funzionalità
+Desktop application (Tauri 2 + Vue 3) to store usernames and their passwords and to generate secure passwords.
 
-- Archivio di voci: servizio, URL, utente, password, note, tag/categoria, date di creazione e modifica.
-- Creazione, modifica, eliminazione e ricerca (servizio, utente, tag).
-- Generatore di password sicure configurabile:
-  - numero di caratteri (4–128)
-  - lettere maiuscole sì/no
-  - lettere minuscole sì/no
-  - numeri sì/no
-  - caratteri speciali sì/no
-  - almeno un carattere per ogni classe selezionata; casualità da generatore crittografico.
-- Copia della password negli appunti, mostra/nascondi password.
-- Vault protetto da **master password**: cifratura AES-256-GCM, chiave derivata con Argon2id; pulsanti *Blocca* e *Cambia password*.
+## Features
 
-## Screenshot
+- Entry store: service, URL, username, password, notes, tags/category, creation and modification dates.
+- Create, edit, delete and search (service, username, tags).
+- Configurable secure password generator:
+  - number of characters (4–128)
+  - uppercase letters on/off
+  - lowercase letters on/off
+  - digits on/off
+  - special characters on/off
+  - at least one character for each selected class; randomness from a cryptographic generator.
+- Copy the password to the clipboard, show/hide password.
+- Vault protected by a **master password**: AES-256-GCM encryption, key derived with Argon2id; *Lock* and *Change password* buttons.
 
-Schermate con dati di esempio inventati.
+## Screenshots
+
+Screenshots with made-up sample data. The UI is in Italian.
 
 <p align="center">
-  <img src="docs/screenshots/05-lista-e-voce.png" alt="Lista delle voci e form di modifica con il generatore di password" width="820">
+  <img src="docs/screenshots/05-lista-e-voce.png" alt="Entry list and edit form with the password generator" width="820">
 </p>
 
 | | |
 |---|---|
-| <img src="docs/screenshots/01-primo-avvio.png" alt="Creazione della master password" width="400"><br>Primo avvio: creazione della master password | <img src="docs/screenshots/02-migrazione.png" alt="Cifratura di un vault in chiaro esistente" width="400"><br>Migrazione di un vault in chiaro |
-| <img src="docs/screenshots/03-sblocco.png" alt="Schermata di sblocco" width="400"><br>Sblocco del vault | <img src="docs/screenshots/04-sblocco-errore.png" alt="Sblocco con password errata" width="400"><br>Password errata |
-| <img src="docs/screenshots/06-nuova-voce.png" alt="Form per una nuova voce" width="400"><br>Nuova voce | <img src="docs/screenshots/07-cambia-password.png" alt="Dialog per cambiare la master password" width="400"><br>Cambio della master password |
+| <img src="docs/screenshots/01-primo-avvio.png" alt="Creating the master password" width="400"><br>First launch: creating the master password | <img src="docs/screenshots/02-migrazione.png" alt="Encrypting an existing plaintext vault" width="400"><br>Migrating a plaintext vault |
+| <img src="docs/screenshots/03-sblocco.png" alt="Unlock screen" width="400"><br>Unlocking the vault | <img src="docs/screenshots/04-sblocco-errore.png" alt="Unlock with a wrong password" width="400"><br>Wrong password |
+| <img src="docs/screenshots/06-nuova-voce.png" alt="Form for a new entry" width="400"><br>New entry | <img src="docs/screenshots/07-cambia-password.png" alt="Dialog to change the master password" width="400"><br>Changing the master password |
 
-## Requisiti
+## Requirements
 
-- Node.js (>= 20) e npm
-- Rust (stable, edition 2024) e cargo
-- Dipendenze di sistema Tauri per Linux: vedi <https://tauri.app/start/prerequisites/>
+- Node.js (>= 20) and npm
+- Rust (stable, edition 2024) and cargo
+- Tauri system dependencies for Linux: see <https://tauri.app/start/prerequisites/>
+- `cargo-audit` (for `npm run regression`): `cargo install cargo-audit --locked`
 
-## Comandi
+## Commands
 
 ```bash
-npm install                # installa le dipendenze frontend
-npm run tauri dev          # avvia l'app in sviluppo
-npm run tauri build        # build di produzione
-npm test                   # test frontend (Vitest)
-npm run test:rust          # test backend (cargo test)
-npm run regression         # regressione completa: test frontend + Rust + build
+npm install                # install frontend dependencies
+npm run tauri dev          # run the app in development
+npm run tauri build        # production build
+npm test                   # frontend tests (Vitest)
+npm run test:rust          # backend tests (cargo test)
+npm run audit:rust         # Rust dependency audit (RustSec, requires cargo-audit and network)
+npm run regression         # full regression: frontend + Rust tests + audit + build
 ```
 
-> **Terminale dello snap di VS Code (Linux):** se `npm run tauri dev` crasha con `GLib-GIO-ERROR ... antialiasing`
-> o `symbol lookup error ... libpthread`, usa `./scripts/dev-clean.sh`, che ripulisce le variabili d'ambiente ereditate.
+> **VS Code snap terminal (Linux):** if `npm run tauri dev` crashes with `GLib-GIO-ERROR ... antialiasing`
+> or `symbol lookup error ... libpthread`, use `./scripts/dev-clean.sh`, which cleans up the inherited environment variables.
 
-## Build, installazione e rimozione
+## Build, installation and removal
 
-`npm run tauri build` produce i pacchetti nativi in `src-tauri/target/release/bundle/` (va eseguito sul sistema
-operativo di destinazione). Guida completa per Linux, Windows e macOS, con installazione, disinstallazione, firma e
-posizione dei dati: [`docs/BUILD-E-INSTALLAZIONE.md`](docs/BUILD-E-INSTALLAZIONE.md).
+`npm run tauri build` produces the native packages in `src-tauri/target/release/bundle/` (it must be run on the
+target operating system). Full guide for Linux, Windows and macOS, covering installation, uninstallation, signing and
+data location (in Italian): [`docs/BUILD-E-INSTALLAZIONE.md`](docs/BUILD-E-INSTALLAZIONE.md).
 
-Esempio Linux (verificato): `sudo apt install ./src-tauri/target/release/bundle/deb/Forziere_1.0.0_amd64.deb`
-per installare, `sudo apt remove forziere` per rimuovere (i dati in `vault.json` non vengono cancellati).
+Linux example (verified): `sudo apt install ./src-tauri/target/release/bundle/deb/Forziere_1.0.0_amd64.deb`
+to install, `sudo apt remove forziere` to remove (the data in `vault.json` is not deleted).
 
-### Icona
+### Icon
 
-Sorgente: `design/icon.svg`. Per rigenerare tutte le dimensioni (PNG, `.ico`, `.icns`) dopo una modifica:
+Source: `design/icon.svg`. To regenerate all sizes (PNG, `.ico`, `.icns`) after a change:
 
 ```bash
-inkscape design/icon.svg -o design/icon.png -w 1024 -h 1024   # oppure un altro renderer SVG
+inkscape design/icon.svg -o design/icon.png -w 1024 -h 1024   # or another SVG renderer
 npm run tauri icon design/icon.png
-rm -rf src-tauri/icons/android src-tauri/icons/ios            # non servono (app solo desktop)
-cp design/icon.svg public/icon.svg                            # favicon del frontend
+rm -rf src-tauri/icons/android src-tauri/icons/ios            # not needed (desktop-only app)
+cp design/icon.svg public/icon.svg                            # frontend favicon
 ```
 
-## Dati
+## Data
 
-Le voci sono salvate in `vault.json` nella cartella dati dell'app (`app_data_dir`, su Linux tipicamente
-`~/.local/share/com.giorgio-marini.forziere/`). La scrittura è atomica (file temporaneo + rename).
+Entries are stored in `vault.json` in the app data folder (`app_data_dir`, typically
+`~/.local/share/com.giorgio-marini.forziere/` on Linux). Writes are atomic (temporary file + rename).
 
-### Master password e cifratura
+### Master password and encryption
 
-- Al primo avvio si crea la master password (minimo 12 caratteri). Un vault in chiaro creato da una versione
-  precedente viene **cifrato sul posto** alla prima apertura: il file in chiaro viene sostituito.
-- Tutte le voci (anche servizi e URL) sono cifrate con **AES-256-GCM**; la chiave è derivata dalla password con
-  **Argon2id** (19 MiB, 2 iterazioni, 1 lane, salt casuale di 16 byte). Nonce nuovo a ogni salvataggio; versione e
-  parametri KDF sono autenticati, quindi una modifica del file fa fallire lo sblocco.
-- La master password non viene mai salvata. **Non esiste recupero:** se la dimentichi, i dati sono persi.
-- Formato di `vault.json` (v2): `{ "version": 2, "kdf": {alg, m, t, p, salt}, "nonce", "ciphertext" }` (base64).
-- Limite noto: finché il vault è sbloccato le voci stanno in memoria in chiaro; la chiave viene azzerata al blocco.
-  Il blocco automatico per inattività e lo svuotamento degli appunti sono ancora da fare (vedi `TODO.md`).
+- On first launch you create the master password (minimum 12 characters). A plaintext vault created by an earlier
+  version is **encrypted in place** the first time it is opened: the plaintext file is replaced.
+- All entries (including service names and URLs) are encrypted with **AES-256-GCM**; the key is derived from the
+  password with **Argon2id** (19 MiB, 2 iterations, 1 lane, random 16-byte salt). A fresh nonce is used on every
+  save; the version and KDF parameters are authenticated, so any modification of the file makes unlocking fail.
+- The master password is never stored. **There is no recovery:** if you forget it, the data is lost.
+- `vault.json` format (v2): `{ "version": 2, "kdf": {alg, m, t, p, salt}, "nonce", "ciphertext" }` (base64).
+- Known limitation: while the vault is unlocked, entries are held in memory in plaintext; the key is zeroed on lock.
+  Automatic locking on inactivity and clearing the clipboard are still to do (see `TODO.md`).
 
-## Struttura
+## Structure
 
-- `src/` – frontend Vue (componenti, wrapper `api.js`)
-- `design/icon.svg` – sorgente dell'icona (lucchetto verde, stile cyberpunk); `design/icon.png` è il render 1024×1024
-- `src-tauri/src/` – backend Rust (`store.rs`, `crypto.rs`, `generator.rs`, comandi Tauri in `lib.rs`)
-- `docs/screenshots/` – screenshot usati in questo README
+- `src/` – Vue frontend (components, `api.js` wrapper)
+- `design/icon.svg` – icon source (green padlock, cyberpunk style); `design/icon.png` is the 1024×1024 render
+- `src-tauri/src/` – Rust backend (`store.rs`, `crypto.rs`, `generator.rs`, Tauri commands in `lib.rs`)
+- `docs/screenshots/` – screenshots used in this README
 
-## Documenti di progetto
+## Project documents
 
-- `docs/BUILD-E-INSTALLAZIONE.md` – build, installazione e rimozione per OS
-- `TODO.md` – avanzamento lavori
-- `CHANGELOG.md` – storico delle modifiche
+- `docs/BUILD-E-INSTALLAZIONE.md` – build, installation and removal per OS (in Italian)
+- `TODO.md` – work progress (in Italian)
+- `CHANGELOG.md` – change history (in Italian)
 
-## Licenza
+## License
 
-Distribuito con licenza [MIT](LICENSE).
+Distributed under the [MIT](LICENSE) license.

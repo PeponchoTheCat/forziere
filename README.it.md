@@ -1,0 +1,109 @@
+# Forziere
+
+[English](README.md) · **Italiano**
+
+Applicazione desktop (Tauri 2 + Vue 3) per storicizzare utenti e password associate e generare password sicure.
+
+## Funzionalità
+
+- Archivio di voci: servizio, URL, utente, password, note, tag/categoria, date di creazione e modifica.
+- Creazione, modifica, eliminazione e ricerca (servizio, utente, tag).
+- Generatore di password sicure configurabile:
+  - numero di caratteri (4–128)
+  - lettere maiuscole sì/no
+  - lettere minuscole sì/no
+  - numeri sì/no
+  - caratteri speciali sì/no
+  - almeno un carattere per ogni classe selezionata; casualità da generatore crittografico.
+- Copia della password negli appunti, mostra/nascondi password.
+- Vault protetto da **master password**: cifratura AES-256-GCM, chiave derivata con Argon2id; pulsanti *Blocca* e *Cambia password*.
+
+## Screenshot
+
+Schermate con dati di esempio inventati.
+
+<p align="center">
+  <img src="docs/screenshots/05-lista-e-voce.png" alt="Lista delle voci e form di modifica con il generatore di password" width="820">
+</p>
+
+| | |
+|---|---|
+| <img src="docs/screenshots/01-primo-avvio.png" alt="Creazione della master password" width="400"><br>Primo avvio: creazione della master password | <img src="docs/screenshots/02-migrazione.png" alt="Cifratura di un vault in chiaro esistente" width="400"><br>Migrazione di un vault in chiaro |
+| <img src="docs/screenshots/03-sblocco.png" alt="Schermata di sblocco" width="400"><br>Sblocco del vault | <img src="docs/screenshots/04-sblocco-errore.png" alt="Sblocco con password errata" width="400"><br>Password errata |
+| <img src="docs/screenshots/06-nuova-voce.png" alt="Form per una nuova voce" width="400"><br>Nuova voce | <img src="docs/screenshots/07-cambia-password.png" alt="Dialog per cambiare la master password" width="400"><br>Cambio della master password |
+
+## Requisiti
+
+- Node.js (>= 20) e npm
+- Rust (stable, edition 2024) e cargo
+- Dipendenze di sistema Tauri per Linux: vedi <https://tauri.app/start/prerequisites/>
+- `cargo-audit` (per `npm run regression`): `cargo install cargo-audit --locked`
+
+## Comandi
+
+```bash
+npm install                # installa le dipendenze frontend
+npm run tauri dev          # avvia l'app in sviluppo
+npm run tauri build        # build di produzione
+npm test                   # test frontend (Vitest)
+npm run test:rust          # test backend (cargo test)
+npm run audit:rust         # audit dipendenze Rust (RustSec, richiede cargo-audit e rete)
+npm run regression         # regressione completa: test frontend + Rust + audit + build
+```
+
+> **Terminale dello snap di VS Code (Linux):** se `npm run tauri dev` crasha con `GLib-GIO-ERROR ... antialiasing`
+> o `symbol lookup error ... libpthread`, usa `./scripts/dev-clean.sh`, che ripulisce le variabili d'ambiente ereditate.
+
+## Build, installazione e rimozione
+
+`npm run tauri build` produce i pacchetti nativi in `src-tauri/target/release/bundle/` (va eseguito sul sistema
+operativo di destinazione). Guida completa per Linux, Windows e macOS, con installazione, disinstallazione, firma e
+posizione dei dati: [`docs/BUILD-E-INSTALLAZIONE.md`](docs/BUILD-E-INSTALLAZIONE.md).
+
+Esempio Linux (verificato): `sudo apt install ./src-tauri/target/release/bundle/deb/Forziere_1.0.0_amd64.deb`
+per installare, `sudo apt remove forziere` per rimuovere (i dati in `vault.json` non vengono cancellati).
+
+### Icona
+
+Sorgente: `design/icon.svg`. Per rigenerare tutte le dimensioni (PNG, `.ico`, `.icns`) dopo una modifica:
+
+```bash
+inkscape design/icon.svg -o design/icon.png -w 1024 -h 1024   # oppure un altro renderer SVG
+npm run tauri icon design/icon.png
+rm -rf src-tauri/icons/android src-tauri/icons/ios            # non servono (app solo desktop)
+cp design/icon.svg public/icon.svg                            # favicon del frontend
+```
+
+## Dati
+
+Le voci sono salvate in `vault.json` nella cartella dati dell'app (`app_data_dir`, su Linux tipicamente
+`~/.local/share/com.giorgio-marini.forziere/`). La scrittura è atomica (file temporaneo + rename).
+
+### Master password e cifratura
+
+- Al primo avvio si crea la master password (minimo 12 caratteri). Un vault in chiaro creato da una versione
+  precedente viene **cifrato sul posto** alla prima apertura: il file in chiaro viene sostituito.
+- Tutte le voci (anche servizi e URL) sono cifrate con **AES-256-GCM**; la chiave è derivata dalla password con
+  **Argon2id** (19 MiB, 2 iterazioni, 1 lane, salt casuale di 16 byte). Nonce nuovo a ogni salvataggio; versione e
+  parametri KDF sono autenticati, quindi una modifica del file fa fallire lo sblocco.
+- La master password non viene mai salvata. **Non esiste recupero:** se la dimentichi, i dati sono persi.
+- Formato di `vault.json` (v2): `{ "version": 2, "kdf": {alg, m, t, p, salt}, "nonce", "ciphertext" }` (base64).
+- Limite noto: finché il vault è sbloccato le voci stanno in memoria in chiaro; la chiave viene azzerata al blocco.
+  Il blocco automatico per inattività e lo svuotamento degli appunti sono ancora da fare (vedi `TODO.md`).
+
+## Struttura
+
+- `src/` – frontend Vue (componenti, wrapper `api.js`)
+- `design/icon.svg` – sorgente dell'icona (lucchetto verde, stile cyberpunk); `design/icon.png` è il render 1024×1024
+- `src-tauri/src/` – backend Rust (`store.rs`, `crypto.rs`, `generator.rs`, comandi Tauri in `lib.rs`)
+- `docs/screenshots/` – screenshot usati in questo README
+
+## Documenti di progetto
+
+- `docs/BUILD-E-INSTALLAZIONE.md` – build, installazione e rimozione per OS
+- `TODO.md` – avanzamento lavori
+- `CHANGELOG.md` – storico delle modifiche
+
+## Licenza
+
+Distribuito con licenza [MIT](LICENSE).
