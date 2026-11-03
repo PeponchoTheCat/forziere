@@ -67,7 +67,7 @@ Ultimo aggiornamento: 2026-11-03 – versione corrente: 1.0.0
 - [x] Tutti i componenti tradotti; `LanguageSwitch` in barra e schermata di sblocco; scelta in `localStorage`
 - [x] Errori Rust come codici + `translateError`; test Rust e frontend aggiornati (104 frontend, 72 Rust)
 - [x] Test di parità chiavi en/it; regressione verde
-- [ ] Prova manuale in finestra (primo avvio in inglese, cambio lingua, riavvio, errori tradotti)
+- [x] Prova manuale in finestra (eseguita dall'utente): primo avvio in inglese, cambio lingua, riavvio, errori tradotti
 
 ## Futuro
 - [ ] Import/export (CSV/JSON)
