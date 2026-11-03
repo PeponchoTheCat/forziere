@@ -12,6 +12,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 - 2026-11-02: progetto rinominato in **Forziere** (crate `forziere`, lib `forziere_lib`, productName, titolo finestra e pagina, identificativo `com.giorgio-marini.forziere`); corretto il refuso "mamanger"; documentazione aggiornata.
 
 ### Added
+- 2026-11-03: nuovi screenshot nelle due lingue (`docs/screenshots/en/` e `it/`, 7 per lingua) con il selettore di lingua visibile; sostituiscono i vecchi in `docs/screenshots/`. Catturati dalla UI con backend simulato, dati inventati.
 - 2026-11-03: UI multilingua con `vue-i18n`: inglese (predefinita) e italiano, traduzioni in `src/i18n/locales/{en,it}.json`, selettore di lingua (`LanguageSwitch`) nella barra e nella schermata di sblocco, scelta salvata in `localStorage`; `translateError` per i codici di errore del backend. Test AAA per i18n, selettore, errori e parità delle chiavi tra le due lingue (104 test frontend).
 - 2026-11-03: README in inglese come predefinito (`README.md`); la versione italiana è in `README.it.md`, con link reciproci.
 - 2026-11-03: audit delle dipendenze Rust contro RustSec: `scripts/audit-rust.sh` e script `npm run audit:rust`, incluso in `npm run regression` (tra test Rust e build). Fallisce solo per vulnerabilità note; richiede `cargo-audit` e rete (README e CLAUDE.md aggiornati).

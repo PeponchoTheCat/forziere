@@ -21,17 +21,17 @@ Desktop application (Tauri 2 + Vue 3) to store usernames and their passwords and
 
 ## Screenshots
 
-Screenshots with made-up sample data, taken with the Italian UI.
+Screenshots with made-up sample data, in the English UI (the Italian screenshots are in [`README.it.md`](README.it.md)). The language selector is visible at the top right.
 
 <p align="center">
-  <img src="docs/screenshots/05-lista-e-voce.png" alt="Entry list and edit form with the password generator" width="820">
+  <img src="docs/screenshots/en/05-lista-e-voce.png" alt="Entry list and edit form with the password generator" width="820">
 </p>
 
 | | |
 |---|---|
-| <img src="docs/screenshots/01-primo-avvio.png" alt="Creating the master password" width="400"><br>First launch: creating the master password | <img src="docs/screenshots/02-migrazione.png" alt="Encrypting an existing plaintext vault" width="400"><br>Migrating a plaintext vault |
-| <img src="docs/screenshots/03-sblocco.png" alt="Unlock screen" width="400"><br>Unlocking the vault | <img src="docs/screenshots/04-sblocco-errore.png" alt="Unlock with a wrong password" width="400"><br>Wrong password |
-| <img src="docs/screenshots/06-nuova-voce.png" alt="Form for a new entry" width="400"><br>New entry | <img src="docs/screenshots/07-cambia-password.png" alt="Dialog to change the master password" width="400"><br>Changing the master password |
+| <img src="docs/screenshots/en/01-primo-avvio.png" alt="Creating the master password" width="400"><br>First launch: creating the master password | <img src="docs/screenshots/en/02-migrazione.png" alt="Encrypting an existing plaintext vault" width="400"><br>Migrating a plaintext vault |
+| <img src="docs/screenshots/en/03-sblocco.png" alt="Unlock screen" width="400"><br>Unlocking the vault | <img src="docs/screenshots/en/04-sblocco-errore.png" alt="Unlock with a wrong password" width="400"><br>Wrong password |
+| <img src="docs/screenshots/en/06-nuova-voce.png" alt="Form for a new entry" width="400"><br>New entry | <img src="docs/screenshots/en/07-cambia-password.png" alt="Dialog to change the master password" width="400"><br>Changing the master password |
 
 ## Requirements
 
@@ -97,7 +97,7 @@ Entries are stored in `vault.json` in the app data folder (`app_data_dir`, typic
 - `src/` – Vue frontend (components, `api.js` wrapper)
 - `design/icon.svg` – icon source (green padlock, cyberpunk style); `design/icon.png` is the 1024×1024 render
 - `src-tauri/src/` – Rust backend (`store.rs`, `crypto.rs`, `generator.rs`, Tauri commands in `lib.rs`)
-- `docs/screenshots/` – screenshots used in this README
+- `docs/screenshots/{en,it}/` – screenshots used in the READMEs, one set per language
 
 ## Project documents
 

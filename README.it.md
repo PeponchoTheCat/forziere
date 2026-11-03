@@ -21,17 +21,17 @@ Applicazione desktop (Tauri 2 + Vue 3) per storicizzare utenti e password associ
 
 ## Screenshot
 
-Schermate con dati di esempio inventati, in interfaccia italiana.
+Schermate con dati di esempio inventati, in interfaccia italiana (quelle in inglese sono in [`README.md`](README.md)). Il selettore della lingua è visibile in alto a destra.
 
 <p align="center">
-  <img src="docs/screenshots/05-lista-e-voce.png" alt="Lista delle voci e form di modifica con il generatore di password" width="820">
+  <img src="docs/screenshots/it/05-lista-e-voce.png" alt="Lista delle voci e form di modifica con il generatore di password" width="820">
 </p>
 
 | | |
 |---|---|
-| <img src="docs/screenshots/01-primo-avvio.png" alt="Creazione della master password" width="400"><br>Primo avvio: creazione della master password | <img src="docs/screenshots/02-migrazione.png" alt="Cifratura di un vault in chiaro esistente" width="400"><br>Migrazione di un vault in chiaro |
-| <img src="docs/screenshots/03-sblocco.png" alt="Schermata di sblocco" width="400"><br>Sblocco del vault | <img src="docs/screenshots/04-sblocco-errore.png" alt="Sblocco con password errata" width="400"><br>Password errata |
-| <img src="docs/screenshots/06-nuova-voce.png" alt="Form per una nuova voce" width="400"><br>Nuova voce | <img src="docs/screenshots/07-cambia-password.png" alt="Dialog per cambiare la master password" width="400"><br>Cambio della master password |
+| <img src="docs/screenshots/it/01-primo-avvio.png" alt="Creazione della master password" width="400"><br>Primo avvio: creazione della master password | <img src="docs/screenshots/it/02-migrazione.png" alt="Cifratura di un vault in chiaro esistente" width="400"><br>Migrazione di un vault in chiaro |
+| <img src="docs/screenshots/it/03-sblocco.png" alt="Schermata di sblocco" width="400"><br>Sblocco del vault | <img src="docs/screenshots/it/04-sblocco-errore.png" alt="Sblocco con password errata" width="400"><br>Password errata |
+| <img src="docs/screenshots/it/06-nuova-voce.png" alt="Form per una nuova voce" width="400"><br>Nuova voce | <img src="docs/screenshots/it/07-cambia-password.png" alt="Dialog per cambiare la master password" width="400"><br>Cambio della master password |
 
 ## Requisiti
 
@@ -97,7 +97,7 @@ Le voci sono salvate in `vault.json` nella cartella dati dell'app (`app_data_dir
 - `src/` – frontend Vue (componenti, wrapper `api.js`)
 - `design/icon.svg` – sorgente dell'icona (lucchetto verde, stile cyberpunk); `design/icon.png` è il render 1024×1024
 - `src-tauri/src/` – backend Rust (`store.rs`, `crypto.rs`, `generator.rs`, comandi Tauri in `lib.rs`)
-- `docs/screenshots/` – screenshot usati in questo README
+- `docs/screenshots/{en,it}/` – screenshot usati nei README, un set per lingua
 
 ## Documenti di progetto
 
